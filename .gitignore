@@ -1,0 +1,7 @@
+# Ignore
+lecture_notes/*
+
+# Except
+!lecture_notes/**.pdf
+!lecture_notes/**.tex
+!lecture_notes/figs
