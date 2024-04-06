@@ -1,5 +1,6 @@
 # Ignore
 lecture_notes/*
+.idea
 
 # Except
 !lecture_notes/**.pdf
