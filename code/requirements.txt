@@ -1,5 +1,4 @@
 keras
 scikit-learn
-pandas
 matplotlib
 tensorflow
