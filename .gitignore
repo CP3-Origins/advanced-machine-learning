@@ -1,6 +1,7 @@
 # Ignore
 lecture_notes/*
 .idea
+**/__pycache__
 
 # Except
 !lecture_notes/**.pdf

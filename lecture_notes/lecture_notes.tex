@@ -384,18 +384,17 @@ plt.show()
 			\end{lstlisting}
 			This example will output how the loss and accuracy improves across the training. Note, that this problem is linear and a neural network is a bit overkill. This simple example is to show all the parts needed to have a functional setup with plotting of the training process. We will build on this in further lectures.
 
-		\subsubsection{Exercises}
-			The exercises this week aim to introduce the basic ways of creating neural networks. We will take a look at three methods, with the latter one being more advanced and what you will need to master to have maximal customization control of your network. Relevant code for this week is found in the folder \texttt{week 1}. The network you need to recreate is the network we discussed in the previous section with one hidden layer with 8 nodes, 3 nodes in the final layer, and 4 input parameters. A working version of this network can be found in Python script \texttt{main.py}. This network you will have to recreate in different ways in this weeks exercises. If you can replicate the result from this example code using the method specified in the exercise you can consider the exercise complete. If you need help, consult the official documentation. \newline
-			
-			\textbf{Exercise 1: Sequential class}\newline
-			In this exercise you need to use the sequential class as in this weeks example code. However, instead of using the \texttt{model.add} method you should create a list of layers and parse them directly to the sequential class. You should thus have a model definition like \texttt{model = Sequential([your\_list])}. For this exercise the script \texttt{sequential.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
-			
-			\textbf{Exercise 2: Functional interface}\newline
-			In this exercise you need to use the functional interface. Here you need to define your input as a layer and then the layers with neurons. Then you can define the model as \texttt{model = Model(inputs=input\_layer, outputs=x)}. For this exercise the script \texttt{functional.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
-			
-			\textbf{Exercise 3: Subclassing the model class}\newline
-			In this exercise you need to use Subclassing, where you create your network as a classing inheriting from the model class. Here you need to define your class as a subclass for the model class, e.g. \texttt{class Network(Model)}. Then you need to declare your layers in the \texttt{\_\_init\_\_} function and the then build the network by defining a function called \texttt{build} which takes \texttt{self}, and the input tensor as variables. Remember to return the result. Then you can define the model as \texttt{model = Network()}. For this exercise the script \texttt{subclassing.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
+	\subsection{Exercises}
+		The exercises this week aim to introduce the basic ways of creating neural networks. We will take a look at three methods, with the latter one being more advanced and what you will need to master to have maximal customization control of your network. Relevant code for this week is found in the folder \texttt{week 1}. The network you need to recreate is the network we discussed in the previous section with one hidden layer with 8 nodes, 3 nodes in the final layer, and 4 input parameters. A working version of this network can be found in Python script \texttt{main.py}. This network you will have to recreate in different ways in this weeks exercises. If you can replicate the result from this example code using the method specified in the exercise you can consider the exercise complete. If you need help, consult the official documentation. \newline
 		
+		\textbf{Exercise 1: Sequential class}\newline
+		In this exercise you need to use the sequential class as in this weeks example code. However, instead of using the \texttt{model.add} method you should create a list of layers and parse them directly to the sequential class. You should thus have a model definition like \texttt{model = Sequential([your\_list])}. For this exercise the script \texttt{sequential.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
+		
+		\textbf{Exercise 2: Functional interface}\newline
+		In this exercise you need to use the functional interface. Here you need to define your input as a layer and then the layers with neurons. Then you can define the model as \texttt{model = Model(inputs=input\_layer, outputs=x)}. For this exercise the script \texttt{functional.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
+		
+		\textbf{Exercise 3: Subclassing the model class}\newline
+		In this exercise you need to use Subclassing, where you create your network as a classing inheriting from the model class. Here you need to define your class as a subclass for the model class, e.g. \texttt{class Network(Model)}. Then you need to declare your layers in the \texttt{\_\_init\_\_} function and the then build the network by defining a function called \texttt{build} which takes \texttt{self}, and the input tensor as variables. Remember to return the result. Then you can define the model as \texttt{model = Network()}. For this exercise the script \texttt{subclassing.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
 		
 \section{Machine learning and methods of training}
 	In this lecture we look at machine learning in a broader perspective to get a feeling for the different methods which one can use. Then we focus in on neural networks and deep learning, before looking at methods of training neural networks.
@@ -433,6 +432,8 @@ else:
 			\item Gaussian processes			
 		\end{itemize}
 		These different methods have different areas of applications, and many of them a valid in the same application areas. The training requirements may also differ for each method, and many of these methods can often be designed to trained in different ways.
+		
+		A short word on deep learning. Deep learning is when we talk of more complex ML, meaning not just to a simple densely connected neural network with a few layers, but rather models with thousands if not millions of parameters. Such models can often combine different ML methods and different training methods for the different components of the DL model. An example is a convolutional network that uses convolution and pooling layers to condense a lot of information into a densely connected network.
 	
 	\subsection{Training of ML methods}
 		Since the point of ML methods is to learn from data, and not work by parameters set by humans, a key part to this field is the way you train your ML method. In this section we will look at three main ways of training ML methods.
@@ -458,117 +459,283 @@ else:
 			\end{gather}
 			Given enough data we can train a neural network to become any function $f(x)$ and thus have the neural network imitate whatever we want. The main requirement is that our neural network have enough degrees of freedom and that we have an appropriate amount of training data. 
 			
-			When considering regression problems we can thus use a neural network. In some cases we might be model something using a very complicated or compute intensive mathematical model, fx fluid dynamics. In this case it is possible to make an approximate model with a neural network. It can often be orders of magnitude faster to compute a bit of matrix multiplication than solving differential equations, and with enough data one can get very close with the approximation one can do with a neural network, keeping mind that the alternative model often also uses approximations to increase compute performance. TODO\cite{}
+			In the case of regression problems we can often use a neural network. In some cases we might be model something using a very complicated or compute intensive mathematical model, fx fluid dynamics. In this case it is possible to make an approximate model with a neural network. It can often be orders of magnitude faster to compute a bit of matrix multiplication than solving differential equations, and with enough data one can get very close with the approximation one can do with a neural network, keeping mind that the alternative model often also uses approximations to increase compute performance \cite{fukami:2019, wang:2019, vandal:2017, ling:2016}.
 			
-			\begin{tikzpicture}
-				\begin{axis}[%
-					axis lines = left,
-					xlabel = $x$,
-					ylabel = $y$,
-					clip mode=individual % so things drawn by \draw and similar are not cut off
-					]
-					\addplot [blue, only marks, mark=*, mark size=5] table [%
-					x = x, 
-					y = y, 
-					col sep = comma]{
-						x, y
-						%cluster 1
-						2, 3
-						3, 5
-						4, 5
-						3, 8
-						5, 9
-						3, 2
-						5, 6
-						6, 6
-						7, 9
-						10, 4
-						11, 5
-						9, 4
-					};
-					
-					\addplot+[red, only marks, mark=*, mark size=5] table [%
-					x = x, 
-					y = y, 
-					col sep = comma]{
-						x, y
-						20, 10
-						21, 12
-						24, 12
-						25, 13
-						27, 14
-						22, 13
-						23, 15
-						25, 10
-						15, 14
-					};
-					
-					% to be able to use axis coordinates with \draw directly you need
-					% \pgfplotsset{compat=1.11} or a higher version
-					% if that is not present, use (axis cs:4,14) instead of (4,14),
-					% to specify that the values should be interpreted as axis coordinates
-					\draw [dashed] (4,14) -- (25,2);					
-				\end{axis}
-			\end{tikzpicture}
-		\subsubsection{Unsupervised learning}
+			Another case is classification and image recognition, and this is a huge field where supervised learning is showing potential. This has many practical applications. Consider making a self-driving car, one thing to do is to recognize the surroundings. There could be trees, people, other cars and many other obstacles. 
+			
+			Consider making to mathematical model of how a car or humans look. It's impossible to do with a simple description, because cars can be of different types such as SUV's, micro cars, hatchbacks, estates, vans etc. and the color could also be different together with other factors. Likewise, humans comes in different sizes ans shapes and with different skin color, clothes. There is no simple description for such objects.
+			
+			Instead of trying to model this with some complex function, we can just use a neural network and train it with supervised learning if we have enough labeled training data. We don't have to know the underlying model, it's hidden inside the neural networks in the different weights and biases. As long as we have all types of cars, humans, etc. represented in the training data, it should be possible to get a pretty good classification from a neural network. This we can then use to figure out the environment around our self-driving car and take act. Should we brake because there is a pedestrian in front of us, or is that a car in front? Together with radar sensors to measure and attach velocities to the objects around us we can react to the environment. One can also use AI to recognize speed signs etc. to understand the speed limit or other signs.
+			
+			\begin{figure}
+				\centering
+				\begin{tikzpicture}
+					\begin{axis}[%
+						axis lines = left,
+						xlabel = $x$,
+						ylabel = $y$,
+						clip mode=individual % so things drawn by \draw and similar are not cut off
+						]
+						\addplot [blue, only marks, mark=*, mark size=5] table [%
+						x = x, 
+						y = y, 
+						col sep = comma]{
+							x, y
+							%cluster 1
+							2, 3
+							3, 5
+							4, 5
+							3, 8
+							5, 9
+							3, 2
+							5, 6
+							6, 6
+							7, 9
+							10, 4
+							11, 5
+							9, 4
+						};
+						
+						\addplot+[red, only marks, mark=*, mark size=5] table [%
+						x = x, 
+						y = y, 
+						col sep = comma]{
+							x, y
+							20, 10
+							21, 12
+							24, 12
+							25, 13
+							27, 14
+							22, 13
+							23, 15
+							25, 10
+							15, 14
+						};
+						
+						% to be able to use axis coordinates with \draw directly you need
+						% \pgfplotsset{compat=1.11} or a higher version
+						% if that is not present, use (axis cs:4,14) instead of (4,14),
+						% to specify that the values should be interpreted as axis coordinates
+						\draw [dashed] (4,14) -- (25,2);					
+					\end{axis}
+				\end{tikzpicture}
+				\caption{Boundary division from supervised learning.}
+				\label{fig:supervised}
+			\end{figure}
+			Without ML methods it would be near impossible to make a self-driving car, but it seems like it can more or less be done with machine learning. But we also see problems to work on, such as handling things that the networks hasn't been trained to handle.
+			
+			This is one of the limitations, there is no guarantee that the network will perform well outside the scope of the training. The logic could be very divergent outside of the training area causing very dangerous driving in the case of our self-driving car, and it cannot detect new categories and somehow evolve without retraining.	
 		
-			\begin{tikzpicture}
-				\begin{axis}[%
-					axis lines = left,
-					xlabel = $x$,
-					ylabel = $y$,
-					clip mode=individual % so things drawn by \draw and similar are not cut off
-					]
-					\addplot [blue, only marks, mark=*, mark size=5] table [%
-					x = x, 
-					y = y, 
-					col sep = comma]{
-						x, y
-						%cluster 1
-						2, 3
-						3, 5
-						4, 5
-						3, 8
-						5, 9
-						3, 2
-						5, 6
-						6, 6
-						7, 9
-						10, 4
-						11, 5
-						9, 4
-					};
+			In Figure \ref{fig:supervised} it is illustrated how supervised learning aims a optimizing the boundary between the categories we have defined. Given we have activation function this boundary can be non-linear and generally it is non-linear, but is shown linear for simplicity.
+				
+		\subsubsection{Unsupervised learning}
+			An alternative to supervised learning is unsupervised learning. There are many ML methods which can be used in this context including neural networks such as autoencoders. The main goal of unsupervised learning is to train an algorithms without having any labeled training data, in general you just have some result, $y$, but not the input $x$ that led to the result.
+			
+			Some of the cons of this method can be listed as:
+			\begin{itemize}
+				\item It can construct categories by itself
+				\item New features and patterns can be discovered
+				\item No need for labeled data
+			\end{itemize}
+			One the other hand it can also have the following downside:
+			\begin{itemize}
+				\item Interpretation is require to understand the detected patterns
+				\item Accuracy is often worse than supervised learning
+				\item No guarantee a useful result will be obtained
+			\end{itemize}
+
+			\begin{figure}
+				\centering
+				\begin{tikzpicture}
+					\begin{axis}[
+						minor tick num=3,
+						%  axis y line=left,
+						%  axis x line=bottom,
+						xlabel=$x$,ylabel=$\sin x$,
+						%  yticklabels=\empty,
+						ymax=2,
+						ymin=-2,
+						background/.style={fill=gray},
+						]
+						\addplot[smooth,blue,mark=none, domain=0:10,samples=40]
+						{cos(deg(2*x))};
+						\addplot[dashed,red,mark=none, domain=5.5:7.1,samples=40]
+						{2*cos(deg(2*x))};
+					\end{axis}
+				\end{tikzpicture}
+				\caption{Anomaly detection using unsupervised learning. The expected result is the blue line, but then there might be a peak like the dashed red line.}
+				\label{fig:anomaly}
+			\end{figure}
 					
-					\addplot+[red, only marks, mark=*, mark size=5] table [%
-					x = x, 
-					y = y, 
-					col sep = comma]{
-						x, y
-						20, 10
-						21, 12
-						24, 12
-						25, 13
-						27, 14
-						22, 13
-						23, 15
-						25, 10
-						15, 14
-					};
-					
-					% save a coordinate for use later
-					\coordinate (c2) at (23,12);
-					
-					% the blue circle is drawn inside the axis environment, and in axis coordinates
-					% hence it becomes an ellipse
-					\draw [blue, dashed] (6,6) circle[radius=5]; 
-					
-				\end{axis}
-				% the red circle is drawn outside the axis, so actually looks like a circle,
-				% but the radius has no relation to the axis coordinates
-				\draw [red, dashed] (c2) circle[radius=2cm];
-			\end{tikzpicture}
+			Since unsupervised learning doesn't require any knowledge input from the creator, it will try to find logic in any data given. It also means it is sensitive to anomalies and can thus be used to anomaly detection from data.
+			
+			Consider some sinus curve for simplicity as seen in Figure \ref{fig:anomaly}. You might have some analogue signal of this shape, and you want to monitor if there is something unusual going on with signal. You can of course manually make checks if the signal has a certain amplitude, period etc. But in less simple cases like monitoring of internet packages or or complex flows, it might not be trivial with hand made definitions what is normal and what is an anomaly.
+			
+			The point is we can use machine learning methods to learn and by itself define some expected patterns of a given input. Then if suddenly an input yields something unexpected the algorithm can flag it, and thus, detect the anomaly without any human definition of what an anomaly is. In this way we don't have any human bias in determining the parameters of the anomaly and we may detect patterns that a human could have missed. 
+			
+			Generally, we can again consider the case of two different populations like with supervised learning. In the former case we look at optimizing a boundary between the predefined categories. In the case of unsupervised learning the grouping is done based on finding common ground in the data and thus finding a cluster of related points. This clustering is illustrated in Figure \ref{fig:unsupervised}, and one can also see some of the dots falling outside the clusters either suggesting some noise or some anomaly depending on the physical background of the data. If the errors are under control than we could argue that the red point outside the circle is an anomaly.
+			
+			\begin{figure}
+				\centering
+				\begin{tikzpicture}
+					\begin{axis}[%
+						axis lines = left,
+						xlabel = $x$,
+						ylabel = $y$,
+						clip mode=individual % so things drawn by \draw and similar are not cut off
+						]
+						\addplot [blue, only marks, mark=*, mark size=5] table [%
+						x = x, 
+						y = y, 
+						col sep = comma]{
+							x, y
+							%cluster 1
+							2, 3
+							3, 5
+							4, 5
+							3, 8
+							5, 9
+							3, 2
+							5, 6
+							6, 6
+							7, 9
+							10, 4
+							11, 5
+							9, 4
+						};
+						
+						\addplot+[red, only marks, mark=*, mark size=5] table [%
+						x = x, 
+						y = y, 
+						col sep = comma]{
+							x, y
+							20, 10
+							21, 12
+							24, 12
+							25, 13
+							27, 14
+							22, 13
+							23, 15
+							25, 10
+							15, 14
+						};
+						
+						% save a coordinate for use later
+						\coordinate (c2) at (23,12);
+						
+						% the blue circle is drawn inside the axis environment, and in axis coordinates
+						% hence it becomes an ellipse
+						\draw [blue, dashed] (6,6) circle[radius=5]; 
+						
+					\end{axis}
+					% the red circle is drawn outside the axis, so actually looks like a circle,
+					% but the radius has no relation to the axis coordinates
+					\draw [red, dashed] (c2) circle[radius=2cm];
+				\end{tikzpicture}
+				\caption{Clustering of self learned groups from unsupervised learning.}
+				\label{fig:unsupervised}
+			\end{figure}
+			
+			Another example of unsupervised learning that is a be different is that of autoencoder neural networks (and the similar variational autoencoder). This type of network have the same input as output, or some slightly perturbed input from the output.
+			
+			The idea is that you take in an input and then reduce it to some latent vector representation of the input, that is the encoder part of the network. Then the decoder part of the network then recovers the input from the latent vector. You might ask why you would want to do this, and there are a few reasons.
+			
+			The latent vector in the middle is a compact representation of some input. You could think of simple example like that of irises. Let's say you have a stack of pictures of 4 different types of iris flowers. Now, the input is the picture and so is the output. But then in principle, you should be able to compress the input to a vector of 4 degrees of freedom for each type of irises. In the case you didn't know that, you might be able to obtain a minimal categorization of whatever input you consider, because the latent vector contains the minimal information to recover the input again.
+			
+			Another example is that of denoising of images. You can easily take a lot of images, add a bit of Gaussian noise to the input and demand a clear and sharp output. In this case you are can train the autoencoder to denoise images or perform any other systematic transformation of an image.
 		
 		\subsubsection{Reinforcement learning}
+			Somewhere between supervised and unsupervised learning we have the method called reinforcement learning. In this case we don not require a labeled dataset, but we are to define a reward function to maximize. It is incredible powerful and one of the methods also used in ChatGPT together with supervised learning.
+			
+			This result in some of the following cons of this method:
+			\begin{itemize}
+				\item It can self correct errors
+				\item it can learn from experience
+				\item Very similar to human learning
+				\item No need for labeled data
+			\end{itemize}
+			One the other hand it can also have the following downside:
+			\begin{itemize}
+				\item Not suitable for simple problems
+				\item It is data and compute hungry
+				\item It assumes a Markovian world
+				\item Depends on the validity of the reward function
+			\end{itemize}
+		
+			The fact reinforcement learning does not require labeled data is a huge advantage, but it does require a lot of data to train. This type of learning is similar to how humans think. We often have some values that we consider when we make decisions. How can I maximize profit? How can I make my life as good as possible. This is essentially the same as what we want to achieve with the reward function. Then the training measures different inputs and how such actions help achieving the goal encoded in the reward function.
+			
+			As mentioned, reinforcement learning may face issue from the fact that the world is not Markovian which means that the next state depends only on the previous state, which is an oversimplification and in general we humans sometimes do things that make no sense, which again does not fit into this picture. Nevertheless, this approach is good enough, and using neural networks with memory one can future counter such issues. 
+			
+			A key concept of reinforcement learning is exploration. Let's say you want to make a robot that can walk, but you have no idea how to program that. You could define a reward function stating, the further you move, the bigger the reward. In principle this is simple and a valid loss function. There is however a big issue.
+			
+			If you just put your stationary robot on the table and tell it to learn it will do nothing. Why? Well, it's not actually doing any changes that could lead to a better state. This leads to the importance of exploration.
+			To make the robot learn we need to allow it to do something random to try out what could possible work, this is why we will modify the action to do with some perturbation $\epsilon$ called exploration. The probability of the robot doing what it believes is the best is thus $1-\epsilon$. This, means that if the exploration is high, there is a high probability the robot will not do the action it considers to be best. This is good in the beginning, because the robot will not know what is good, but as it learns we will likely want to decrease the value of $\epsilon$ as we converge to the optimal action. With exploration on can make a robot with a neural network walk just from defining a reward function based on how far the robot walks.
+			
+			Another key to remember, if you are training a neural network with reinforcement learning, then ensure that the reward has a dependency on weights, otherwise the weights will not be updated using gradient descent as the derivative of the update is zero.
+			
+	\subsection{Training of neural networks}
+		Focusing on how to train neural networks it is necessary to update the trainable parameters of the network which is the weights and biases. Whatever training method you are using, there will be some input to the network. In the case of supervised learning there will also be some output from the training data. The result is that we compute some loss or reward function to determine how we should update the network. Note that if you have some reward function, you need to make sure you end up with a loss function that can be minimized if you want to train the network as described in this section.
+		
+		One of the key concepts to train neural networks is the loss function. For this we consider the case of supervised learning. This is a function that measures the deviation of our prediction and thus how wrong the result from the network is. There are different functions one can use, but one simple example would be the mean squared error (MSE) loss,
+		\begin{gather}
+			\mathcal{L}(\hat{Y}, Y) = \frac{1}{n} \sum_{n=1}^{n} \paa{\hat{y}_i - y_i}^2 =  \frac{1}{n}\paa{\hat{Y} - Y}^2,
+		\end{gather}
+		where we are summing over the $n$ values of the output vector $Y$ and predicted output vector $\hat{Y}$. Likewise one could also consider the mean absolute error (MAE),
+		\begin{gather}
+			\mathcal{L}(\hat{Y}, Y) = \frac{1}{n}\abs{\hat{Y} - Y},
+		\end{gather}
+		where we simple consider the difference of the prediction and true value. You can define whatever value you want, but some loss functions might be more suitable than others. The MSE might not always be the best if the error is less than one, because the squared value yields a smaller loss than just taking the absolute loss, but often the MSE loss is quite effective.
+		
+		This loss function is then a measure in our cost function, where we consider the total cost of our model. Note, that you can have more than just a single loss function as part of the cost function. We can write the cost function as a function of the underlying trainable weights $\Theta = \{w_{ij}, b_j\}$ which is composed of weights and biases,
+		\begin{gather}
+			J(\Theta) = \frac{1}{m} \sum_{m=1}^{k} \mathcal{L}(\hat{Y}, Y)_k,
+		\end{gather}
+		where we sum over the batch size $m$. The cost function is then used for gradient descent updating of the weights and biases in the following ways,
+		\begin{gather}
+			w_{ij}' = w_{ij} - \alpha \frac{\pd W}{\pd w_{ij}},\\
+			b_{j}' = b_j - \alpha \frac{\pd W}{\pd b_{j}},
+		\end{gather}
+		where $\alpha$ is the learning rate. Now I should note that this math describes the simple gradient descent optimization, but we often use a different optimizer such as the one called Adam \cite{kingma:2017}. This algorithm introduces concepts such as momentum, which helps to effectively adjust the learning rate along the way.
+
+	\subsection{Exercises}
+		In this week we will consider exercises related to training methods. We look at supervised and reinforcement learning and compare them. Here we make use of Python classes, though you do not have to worry about this. It is just to show more advanced use of Python, and for now you don't have to program more advanced customization, but your are encouraged to study the whole code. If you can understand all that is going on, you are doing well. The code for this week and be found in the folder \texttt{week 2}.\newline
+		
+		\textbf{Exercise 1: Reinforcement learning}\newline
+			In this task we consider solving a few ordinary differential equations (ODEs). We consider the range $x \in [0,2]$. In particular we want to solve the following equations,
+			\begin{gather}
+				\frac{\pd u}{\pd x} = 2x, \quad u(0) = 1,\\
+				\frac{\pd u}{\pd x} = x^2, \quad u(0) = 1,\\
+				\frac{\pd u}{\pd x} = x^2 - 2x, \quad u(0) = 1.\\
+			\end{gather} 
+			The idea is that we can make a neural network $NN(x)$ be an approximate function of $u(x)$, thus $NN(x) \approx u(x)$. To train it we consider the definition of the derivative,
+			\begin{gather}
+				\frac{\pd NN}{\pd x}= \lim_{h\rightarrow 0} \frac{f(x+h) - f(x)}{h},
+			\end{gather} 
+			and note $h$ as a infinitesimal exploration parameter. This allows us to write out loss function as an MSE loss, 
+			\begin{gather}
+				\mathcal{L} = \paa{\frac{\pd NN(x)}{\pd x} -\frac{\pd u}{\pd x}}^2,
+			\end{gather}
+			now to incorporate the initial condition we can make the substitution, 
+			\begin{gather}
+				g(t) = u(0) + x NN(x),
+			\end{gather} 
+			and obtain the loss function,
+			\begin{gather}
+				\mathcal{L} =\paa{\frac{\pd g(x)}{\pd x} -\frac{\pd u}{\pd x}}^2.
+			\end{gather}
+			This loss function is already implemented together with a custom training method in the file \texttt{reinforcement.py}.
+			What you need to do is to understand what is going on, tune the hyperparamters, and make the network where \texttt{TODO} comment is located such that it can we can obtain an accurate approximation. You can use the plot that is created to see if you are close.\newline
+		
+		\textbf{Exercise 2: Supervised learning}\newline
+			Unfortunately, it is not possible to solves ODEs with supervised learning as it requires labeled $y$ values to train. Fortunately, we know the analytical solutions.  We consider the range $x \in [0,2]$ again. In this exercise you must create a network and compile is as \texttt{self.model} where \texttt{TODO} comment is located in the file \texttt{supervised.py}. You must train it and use the data created for you as the parameters $x$ and $y$. You are free to build and train the model as you like. The goal is to make a supervised model that perfectly imitates the analytical solution.
+			\newline
+			
+		\textbf{Exercise 3: Out of your comfort zone?}\newline
+			As we discussed before, supervised learning in particular is not going to guarantee a good result outside of the training zone. In this task you need to compare the result of using your models from the reinforcement and supervised learning exercise and compare the result when trying to apply them to inputs of the range $x \in [0,5]$. Note that they should still be trained on the range $x \in [0,2]$. The code for this task can be found in \texttt{compare.py} and you need to create your data and plot it \texttt{TODO} comment is located.
+			
+			Compare the two machine learned model and the analytical result for all three solutions in a nice plot. What does this tell you about the performance of supervised and reinforcement learning models outside the training scope?
+		
+		
 % -------------------------------------------------------------------
 % Bibliography
 % -------------------------------------------------------------------
