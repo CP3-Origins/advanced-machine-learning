@@ -156,7 +156,7 @@
 		If you just download the repository as a zip file, you an not leveraging Git. This method works if you simply want to download the course content, but will not teach you how to use Git.
 		
 		In the following we will consider how to work with Git using the terminal. Assume you want to download the course content from GitHub. Then you would go to the directory where you want to download the repository and execute the following command:\newline \newline
-		\texttt{git clone git@github.com:CP3-Origins/advanced-machine-learning.git}
+		\texttt{git clone https://github.com/CP3-Origins/advanced-machine-learning.git}
 		\newline  \newline
 		This will download the repository on your device. Since this course will be updated and improved throughout the course, there might be changes to the course. To update to the latest version you can use the following command anywhere inside the Git project by executing the \texttt{git pull} command.
 
@@ -394,7 +394,7 @@ plt.show()
 		In this exercise you need to use the functional interface. Here you need to define your input as a layer and then the layers with neurons. Then you can define the model as \texttt{model = Model(inputs=input\_layer, outputs=x)}. For this exercise the script \texttt{functional.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
 		
 		\textbf{Exercise 3: Subclassing the model class}\newline
-		In this exercise you need to use Subclassing, where you create your network as a classing inheriting from the model class. Here you need to define your class as a subclass for the model class, e.g. \texttt{class Network(Model)}. Then you need to declare your layers in the \texttt{\_\_init\_\_} function and the then build the network by defining a function called \texttt{build} which takes \texttt{self}, and the input tensor as variables. Remember to return the result. Then you can define the model as \texttt{model = Network()}. For this exercise the script \texttt{subclassing.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
+		In this exercise you need to use Subclassing, where you create your network as a classing inheriting from the model class. Here you need to define your class as a subclass for the model class, e.g. \texttt{class Network(Model)}. Then you need to declare your layers in the \texttt{\_\_init\_\_} function and the then build the network by defining a function called \texttt{call} which takes \texttt{self}, and the input tensor as variables. Remember to return the result. Then you can define the model as \texttt{model = Network()}. For this exercise the script \texttt{subclassing.py} has been prepared and you need to implement code where the \texttt{TODO} comment is located.\newline
 		
 \section{Machine learning and methods of training}
 	In this lecture we look at machine learning in a broader perspective to get a feeling for the different methods which one can use. Then we focus in on neural networks and deep learning, before looking at methods of training neural networks.
@@ -692,8 +692,8 @@ else:
 		\end{gather}
 		where we sum over the batch size $m$. The cost function is then used for gradient descent updating of the weights and biases in the following ways,
 		\begin{gather}
-			w_{ij}' = w_{ij} - \alpha \frac{\pd W}{\pd w_{ij}},\\
-			b_{j}' = b_j - \alpha \frac{\pd W}{\pd b_{j}},
+			w_{ij}' = w_{ij} - \alpha \frac{\pd J}{\pd w_{ij}},\\
+			b_{j}' = b_j - \alpha \frac{\pd J}{\pd b_{j}},
 		\end{gather}
 		where $\alpha$ is the learning rate. Now I should note that this math describes the simple gradient descent optimization, but we often use a different optimizer such as the one called Adam \cite{kingma:2017}. This algorithm introduces concepts such as momentum, which helps to effectively adjust the learning rate along the way.
 
