@@ -31,6 +31,7 @@
 \usepackage{hyperref}
 \usepackage{neuralnetwork}
 \usepackage{pgfplots}
+\usepackage{subcaption}
 \pgfplotsset{compat=1.11} % <-- added
 
 % ============== Setting up listings =========================
@@ -57,6 +58,44 @@
 	tabsize=2
 }
 \lstset{style=mystyle}
+
+% ============== Setting up tikz =========================
+
+\usepackage{tikz}
+\usetikzlibrary{calc,positioning,shadows.blur,decorations.pathreplacing,matrix,backgrounds,arrows.meta,chains}
+\usepackage{etoolbox}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{fadings}
+
+% For convolution
+\newcommand\numRowsK{3}
+\newcommand\numColsK{3}
+\newcommand{\K}[2]{% #1: row, #2: col
+	\edef\Kcol##1##2##3{###2}%
+	\edef\Krow##1##2##3{\noexpand\Kcol###1}%
+	\Krow
+	{1 0 1}
+	{0 1 0}
+	{1 0 1}%
+}
+
+% For maxpool
+\newcommand*{\xMin}{0}%
+\newcommand*{\xMax}{4}%
+\newcommand*{\yMin}{0}%
+\newcommand*{\yMax}{4}%
+
+\newcommand*{\xMinR}{8}%
+\newcommand*{\xMaxR}{10}%
+\newcommand*{\yMinR}{1}%
+\newcommand*{\yMaxR}{3}%
+
+\definecolor{c1}{HTML}{9ACFC6}
+\definecolor{c2}{HTML}{DABBD6}
+\definecolor{c3}{HTML}{CBDCB9}
+\definecolor{c4}{HTML}{9AC3E1}
+
+\newcommand{\empt}[2]{$#1^{\langle #2 \rangle}$}
 % ============== Setting up fancy headers ... =========================
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -285,7 +324,7 @@
 			\end{gather}
 			The problem here is that while we have different weights and biases, due to the lack of nonlinearity, this hidden actually achieve nothing because we can redefine this equation to be just like a network without a hidden layer,
 			\begin{gather}
-				\hat{y} = z_2(z_1(x_i)) = \underbrace{w_{i2}w_{i1}x_i}_{w_{i1}x_i} + \underbrace{w_{i2}b_1 \cdot \vec{1} + b_2 \cdot \vec{1}b_1 \cdot \vec{1}}_{b_1 \cdot \vec{1}}.
+				\hat{y} = z_2(z_1(x_i)) = \underbrace{w_{i2}w_{i1}x_i}_{w_{i1}x_i} + \underbrace{w_{i2}b_1 \cdot \vec{1} + b_2b_1 \cdot \vec{1}}_{b_1 \cdot \vec{1}}.
 			\end{gather}
 			This is perfectly valid because the latter terms is nothing but a sum of trainable variable, which is nothing but a number, and then first part contains the input times two different weight, but again we can just redefine that as a single weight. Therefore, without any nonlinearity we can add an arbitrary number of hidden layers and achieve the equivalent of having no hidden layers.
 			
@@ -734,6 +773,533 @@ else:
 			As we discussed before, supervised learning in particular is not going to guarantee a good result outside of the training zone. In this task you need to compare the result of using your models from the reinforcement and supervised learning exercise and compare the result when trying to apply them to inputs of the range $x \in [0,5]$. Note that they should still be trained on the range $x \in [0,2]$. The code for this task can be found in \texttt{compare.py} and you need to create your data and plot it \texttt{TODO} comment is located.
 			
 			Compare the two machine learned model and the analytical result for all three solutions in a nice plot. What does this tell you about the performance of supervised and reinforcement learning models outside the training scope?
+		
+\section{Neural network architectures}\label{sec:lecture3}
+	In this lecture we consider architectures of neural network and look at alternatives to densely connected neurons. In particular we take a look at convolutional neural networks (CNNs) and recurrent neural networks (RNNs) together with other methods of building networks with memory. The goal is to get a feel for the different types of layers and components we can use to build a network. 
+	
+	To this end, it is important that we carefully consider the problem at hand as this will help us understand how to go about designing a network. If we have a large input or output then maybe we should consider element of CNNs. Alternatively, if we consider applications requiring memory, often in cases with time evolution, then RNN or other methods that can store memory will be good to consider. Often it can be meaningful to combine the different types of layers and methods.
+	
+	\subsection{Artificial neural networks}
+		Traditional artificial neural networks (ANNs) are very effective in many applications providing a function that can approximate effectively and cheaply \cite{lin:2017}. 
+		
+		When an ANN has three or more layers one can consider it as a deep neural network (DNN). This, arguably, is not enough to qualify the network as a DL method, but it is a step in that direction. DNNs can contain tens of layers if not even more in order to have enough parameters to model complex behavior. Having a very wide network with many neurons in each layer is one way to add degrees of freedom, but one may reduce the number of neurons per layer and have a longer network with many smaller layers. Since the layer parameters scale as the product of the number of nodes in the previous layer times the number in the current layer, one can quickly end up with a lot of parameters to train for wide networks. This fact is illustrated in Figure \ref{fig:DNN}, where the wide network in Figure \ref{fig:DNNwide} as 33 parameters compared to the narrow network in Figure \ref{fig:DNNnarrow} with 25 parameters. This includes the weight parameters, each weight parameter corresponds to a connection, plus one bias parameter from each node. Both networks have the same number of neurons, but not the same number of parameters. This is something the architect of the network has to consider in terms of what effects the width has on the output and the trainability of the network.
+		
+		\begin{figure}
+			\centering
+			\begin{subfigure}[b]{0.49\textwidth}
+				\centering
+				\begin{neuralnetwork}[layerspacing=10mm, height=4]
+					\newcommand{\x}[2]{$x_#2$}
+					\newcommand{\y}[2]{$\hat{y}_#2$}
+					\newcommand{\hfirst}[2]{\small $a^{[1]}_#2$}
+					\newcommand{\hsecond}[2]{\small $a^{[2]}_#2$}
+					\inputlayer[count=1, bias=false, title=Input layer, text=\x]
+					\hiddenlayer[count=4, bias=false, title=Layer 1, text=\hfirst] \linklayers
+					\hiddenlayer[count=4, bias=false, title=Layer 2, text=\hsecond] \linklayers
+					\outputlayer[count=1, title=Output layer, text=\y] \linklayers
+				\end{neuralnetwork}
+				\caption{A simple neural network with wide layers. This network 33 trainable parameters.}
+				\label{fig:DNNwide}
+			\end{subfigure}
+			\hfill
+			\begin{subfigure}[b]{0.49\textwidth}
+				\centering
+				\begin{neuralnetwork}[layerspacing=10mm, height=2]
+					\newcommand{\x}[2]{$x_#2$}
+					\newcommand{\y}[2]{$\hat{y}_#2$}
+					\newcommand{\hfirst}[2]{\small $a^{[1]}_#2$}
+					\newcommand{\hsecond}[2]{\small $a^{[2]}_#2$}
+					\newcommand{\hthird}[2]{\small $a^{[3]}_#2$}
+					\newcommand{\hfourth}[2]{\small $a^{[4]}_#2$}
+					\inputlayer[count=1, bias=false, title=Input layer, text=\x]
+					\hiddenlayer[count=2, bias=false, title=Layer 1, text=\hfirst] \linklayers
+					\hiddenlayer[count=2, bias=false, title=Layer 2, text=\hsecond] \linklayers
+					\hiddenlayer[count=2, bias=false, title=Layer 3, text=\hthird] \linklayers
+					\hiddenlayer[count=2, bias=false, title=Layer 4, text=\hfourth] \linklayers
+					\outputlayer[count=1, title=Output layer, text=\y] \linklayers
+				\end{neuralnetwork}
+				\caption{A simple neural network with many narrow layers. This network 25 trainable parameters.}
+				\label{fig:DNNnarrow}
+			\end{subfigure}
+			\caption{Two architectures with the same number of nodes, but with a different number of parameters.}
+			\label{fig:DNN}
+		\end{figure}
+		
+		This example demonstrates the concept that wide layers cost more to train, as you have more parameters to train. For many applications, a DNN with a sufficient number of layers can prove very successful, but the hidden layers are nothing but a black box, a common problem with neural networks. The larger the network, the harder it becomes to interpret the logic of the network, and in practice, it is generally not possible to understand the logic the network has learned.
+		
+		Regarding the issue of training parameters, one can consider a problem in which the input is very large. In a DNN each input is densely connected to the first layer, thus for each neuron in the first layer, one can multiply the number of weights required to process the input. Furthermore, large inputs usually require a rather large first layer to retain the information from the input layer, thus the larger the input the larger the first layer should be leading to the problem of too many parameters. This is one of the limiting factors of DNNs, together with the fact that the neurons have no memory to store information about the previous value it processed.
+		
+		\subsection{Convolutional Neural Networks}
+		A solution to the large input problem is the convolutional neural network (CNN). The problem is that dense connections can result in an exploding number of parameters, which become computationally unfeasible to train. Luckily, it isn't necessary to always use dense layers and a way to reduce the number of parameters is using CNN which uses convolution and pooling to reduce the problem, while retaining key information, before handing it over to a DNN network to produce the desired output. In the case of networks such as autoencoders, one might upscale the dimension of the output to match that of the input by doing upsampling instead of pooling.
+		
+		In this section, the focus is the convolution and pooling used in CNNs. These networks are often used in image processing, thus, it makes sense to consider the case of a 2D input. Instead of connecting every input to every single neuron in the first layer, one can use a kernel. This means each neuron in the layer is only connected to a subspace of the full input. The size of the kernel is thus the size of the weights of each neuron, and one can still have a bias term. By having for example a three by three kernel, as shown in Figure \ref{fig:convolution}, one would end up with only 9 weights per node plus the bias instead of e.g. 49 weights if the full input is a 7x7 two dimensional input. The reduction here is limited because the input as shown in Figure \ref{fig:convolution} is not very large due to practical reasons, but consider a modern 43.2 MP picture with dimensions of 6000x7200. In this case, the convolution neuron would still have 9 weights and not 43.2 million weights as the case would be for a fully connected neuron.  
+		
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}
+				% ------- style -------
+				\tikzset{%
+					parenthesized/.style={%
+						left delimiter  = (,
+						right delimiter = ),
+					},
+					node distance = 10mu,
+				}
+				
+				% ------- equation -------
+				\matrix[matrix of math nodes, parenthesized] (I) {
+					0 & 1 & 1 & 1 & 0 & 0 & 0 \\
+					0 & 0 & 1 & 1 & 1 & 0 & 0 \\
+					0 & 0 & 0 & 1 & 1 & 1 & 0 \\
+					0 & 0 & 0 & 1 & 1 & 0 & 0 \\
+					0 & 0 & 1 & 1 & 0 & 0 & 0 \\
+					0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+					1 & 1 & 0 & 0 & 0 & 0 & 0 \\
+				};
+				
+				\node (*) [right = of I] {${}\cross{}$};
+				
+				\newcommand\Kmatrix{}
+				\foreach \row in {1, ..., 3} {
+					\gdef \sep {}
+					\foreach \col in {1, ..., 3} {%
+						\xdef \Kmatrix {\unexpanded\expandafter{\Kmatrix}\unexpanded\expandafter{\sep}\noexpand \K{\row}{\col}}
+						\gdef \sep { \& }
+					}
+					\xdef \Kmatrix {\unexpanded\expandafter{\Kmatrix}\noexpand\\}
+				}
+				\matrix[matrix of math nodes, parenthesized, ampersand replacement=\&] (K) [right = of *] {
+					\Kmatrix
+				};
+				
+				\node (=) [right = of K] {${}={}$};
+				
+				\matrix[matrix of math nodes, parenthesized] (I*K) [right = of {=}] {
+					1 & 4 & 3 & 4 & 1 \\
+					1 & 2 & 4 & 3 & 3 \\
+					1 & 2 & 3 & 4 & 1 \\
+					1 & 3 & 3 & 1 & 1 \\
+					3 & 3 & 1 & 1 & 0 \\
+				};
+				
+				% ------- highlighting -------
+				\newcommand\rowResult{1}
+				\newcommand\colResult{4}
+				
+				\begin{scope}[on background layer]
+					\newcommand{\padding}{2pt}
+					\coordinate (Is-nw) at ([xshift=-\padding, yshift=+\padding] I-\rowResult-\colResult.north west);
+					\coordinate (Is-se) at ([xshift=+\padding, yshift=-\padding] I-\the\numexpr\rowResult+\numRowsK-1\relax-\the\numexpr\colResult+\numColsK-1\relax.south east);
+					\coordinate (Is-sw) at (Is-nw |- Is-se);
+					\coordinate (Is-ne) at (Is-se |- Is-nw);
+					
+					\filldraw[red,   fill opacity=.1] (Is-nw) rectangle (Is-se);
+					\filldraw[green, fill opacity=.1] (I*K-\rowResult-\colResult.north west) rectangle (I*K-\rowResult-\colResult.south east);
+					
+					\draw[blue, dotted] 
+					(Is-nw) -- (K.north west)
+					(Is-se) -- (K.south east)
+					(Is-sw) -- (K.south west)
+					(Is-ne) -- (K.north east)
+					;
+					\draw[green, dotted] 
+					(I*K-\rowResult-\colResult.north west) -- (K.north west)
+					(I*K-\rowResult-\colResult.south east) -- (K.south east)
+					(I*K-\rowResult-\colResult.south west) -- (K.south west)
+					(I*K-\rowResult-\colResult.north east) -- (K.north east)
+					;
+					
+					\draw[blue,  fill=blue!10!white] (K.north west) rectangle (K.south east);
+					
+					\foreach \row [evaluate=\row as \rowI using int(\row+\rowResult-1)] in {1, ..., \numRowsK} {%
+						\foreach \col [evaluate=\col as \colI using int(\col+\colResult-1)] in {1, ..., \numColsK} {%
+							\node[text=blue] at (I-\rowI-\colI.south east) [xshift=-.3em] {\tiny$\times \K{\row}{\col}$};
+						}
+					}
+				\end{scope}
+				
+				% ------- labels -------
+				\tikzset{node distance=0em}
+				\node[below=of I] (I-label) {$I$};
+				\node at (K |- I-label)     {$K$};
+				\node at (I*K |- I-label)   {$I \cross K$};
+			\end{tikzpicture}
+			\caption{Example of convolution of input, $I$, with the kernel, $K$. The kernel is the trainable weights.}
+			\label{fig:convolution}
+		\end{figure}
+		
+		The values of the kernel acting on the input are then summed and processed with some activation function yielding the final value of the convolution neuron. Mathematically we can write this convolution $G$ as a function of the input $I$ and kernel $K$ as,
+		\begin{gather}\label{eq:cnn}
+			G(I,K) = \sum_{j=1}^{3}\sum_{k=1}^{3} I(m-j, n-k) k(j,k) \nonumber \\
+			= 1\cdot1+0\cdot0+0\cdot1+1\cdot0+1\cdot1+0\cdot0+1\cdot1+1\cdot0+1\cdot1 = 4
+		\end{gather}
+		where $j$ and $k$ are summing over the indices of the kernel, in this case ae 3x3 matrices, and $m$ and $n$ are the row and column indices of the input according to the notation of Figure \ref{fig:convolution}. Then one can apply an activation function to this result.
+		
+		Note that the kernel requires input from surrounding values of the input, one can not simply apply the kernel to edge values. Depending on the size of the kernel one would thus naturally get a size reduction in the convolution layer. It is however possible to apply some padding like zero-padding to pad around the edge such that the kernel can be applied around the edge such that the convolution layer retains the same size as the input.
+		
+		Another option in case one seeks to reduce the size of the convolution layer is to change the stride. The striding regulates the stepping which the kernel should move across the input. One can thus apply a stride of two to only compute a value for every second step. This will then reduce the size of the convolution layer by a factor of two.
+		
+		The final important thing to consider with convolution layers is the number of filters. Since you can generally reduce the number of parameters by orders of magnitudes with convolution layers, one might face an issue with information being lost as the convolution might condense the problem with information loss. To compensate one can have multiple filters in convolution layers, in this case, one essentially repeat the convolution process as described in Figure \ref{fig:convolution}. In this way, each point of the input is compiled multiple times with different weights that can be trained to capture different information about each point. For, example the filters might each capture some color value.
+		
+		Overall, the convolution layer helps to massively reduce the number of parameters, but one should consider additional hyperparameters such as filter number, kernel size, padding and stride.
+		
+		Another operation relevant to CNNs is that of pooling. In practice, this is a layer, but it doesn't add any new trainable parameters. It provides a systematical method to merge output values of the previous layer to decrease the number of parameters passed forward in the network as shown in Figure \ref{fig:maxpool} with max pooling.
+		
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}
+				\fill [c1] (0, 0) rectangle (2, 2);
+				\fill [c2]   (2, 0) rectangle (4, 2);
+				\fill [c3] (0, 2) rectangle (2, 4);
+				\fill [c4]   (2, 2) rectangle (4, 4);
+				
+				\fill [c1]  (8, 1) rectangle (9, 2);
+				\fill [c2]   (9, 1) rectangle (10, 2);
+				\fill [c3]  (8, 2) rectangle (9, 3);
+				\fill [c4]   (9, 2) rectangle (10, 3);
+				
+				\foreach \i in {\xMin,...,\xMax} {
+					\draw [very thin,gray] (\i,\yMin) -- (\i,\yMax)  node [below] at (\i,\yMin) {};
+				}
+				\foreach \i in {\yMin,...,\yMax} {
+					\draw [very thin,gray] (\xMin,\i) -- (\xMax,\i) node [left] at (\xMin,\i) {};
+				}
+				
+				\foreach \i in {\xMin,2,...,\xMax} {
+					\draw [thick,gray] (\i,\yMin) -- (\i,\yMax)  node [below] at (\i,\yMin) {};
+				}
+				\foreach \i in {\yMin,2,...,\yMax} {
+					\draw [thick,gray] (\xMin,\i) -- (\xMax,\i) node [left] at (\xMin,\i) {};
+				}
+				\node at (0.5, 0.5) {7};
+				\node at (1.5, 0.5) {9};
+				\node at (2.5, 0.5) {3};
+				\node at (3.5, 0.5) {5};
+				%
+				\node at (0.5, 1.5) {0};
+				\node at (1.5, 1.5) {7};
+				\node at (2.5, 1.5) {0};
+				\node at (3.5, 1.5) {0};
+				%
+				\node at (0.5, 2.5) {5};
+				\node at (1.5, 2.5) {0};
+				\node at (2.5, 2.5) {9};
+				\node at (3.5, 2.5) {3};
+				%
+				\node at (0.5, 3.5) {9};
+				\node at (1.5, 3.5) {2};
+				\node at (2.5, 3.5) {9};
+				\node at (3.5, 3.5) {6};
+				
+				\draw[draw=black,line width=5pt,-{Latex[length=5mm]}] (4.5, 2)  -- (7.5,2);
+				\node[font=\footnotesize\bfseries] at (6, 2.5) {$\mathbf{2\times 2}$ max pooling};
+				
+				\foreach \i in {\xMinR,...,\xMaxR} {
+					\draw [thick,gray] (\i,\yMinR) -- (\i,\yMaxR)  node [below] at (\i,\yMinR) {};
+				}
+				\foreach \i in {\yMinR,...,\yMaxR} {
+					\draw [thick,gray] (\xMinR,\i) -- (\xMaxR,\i) node [left] at (\xMinR,\i) {};
+				}
+				
+				\node at (8.5, 1.5) {9};
+				\node at (9.5, 1.5) {5};
+				\node at (8.5, 2.5) {9};
+				\node at (9.5, 2.5) {9};
+				
+				\draw [decorate,decoration={brace,amplitude=4pt},xshift=-2pt,yshift=0pt]
+				(0,2) -- (0,4) node [black,midway,xshift=-0.3cm] {\footnotesize $2$};
+				
+				\draw [decorate,decoration={brace,amplitude=4pt},xshift=0pt,yshift=2pt]
+				(0,4) -- (2,4) node [black,midway,yshift=+0.3cm] {\footnotesize $2$};
+			\end{tikzpicture}
+			\caption{Example of using max pooling with a pool size of two and a stride value of two.}
+			\label{fig:maxpool}
+		\end{figure}
+		
+		There are a few different ways to do the pooling such as min, max and average pooling. In the case of max pooling one reduces the pool size to a single value by selecting the maximum value in the given pool as shown in Figure \ref{fig:maxpool}. In this example the pool size is two, thus a $2\cross2$ pool is considered and the highest value is selected. Since the stride is of value two, then one skips one ahead before creating another pool. Had the stride been of value one, then there would be overlap between the pools, but it might be desirable to choose such a value. As with the convolution layer one can also add padding to a pooling layer. The pooling layers generally have pool size, stride and padding as hyperparameters.
+		
+		There is another ingredient you often need to consider when working with CNNs. Recall that you use convolution and pooling layer to handle a larger number of parameters and to condense them into an object with less parameters. In imagine processing you will often use these layer types to reduce the input until it is feasible to use dense layers. In case you have a multi dimensional object, you cannot just parse that to a dense layer as it expects a vector input. For this you can use a flatten function to map the multi dimension object layer to a vector which can then be feed to an ANN.
+		
+		\begin{figure}[t!]
+			\centering
+			\begin{tikzpicture}[thick,scale=0.85]
+				\node at (0.5,-1){\begin{tabular}{c}input image\\layer $l = 0$\end{tabular}};
+				
+				\draw (0,0) -- (1,0) -- (1,1) -- (0,1) -- (0,0);
+				
+				\node at (3,3.5){\begin{tabular}{c}convolutional \\ layer $l = 1$\end{tabular}};
+				
+				\draw[fill=black,opacity=0.2,draw=black] (2.75,1.25) -- (3.75,1.25) -- (3.75,2.25) -- (2.75,2.25) -- (2.75,1.25);
+				\draw[fill=black,opacity=0.2,draw=black] (2.5,1) -- (3.5,1) -- (3.5,2) -- (2.5,2) -- (2.5,1);
+				\draw[fill=black,opacity=0.2,draw=black] (2.25,0.75) -- (3.25,0.75) -- (3.25,1.75) -- (2.25,1.75) -- (2.25,0.75);
+				\draw[fill=black,opacity=0.2,draw=black] (2,0.5) -- (3,0.5) -- (3,1.5) -- (2,1.5) -- (2,0.5);
+				\draw[fill=black,opacity=0.2,draw=black] (1.75,0.25) -- (2.75,0.25) -- (2.75,1.25) -- (1.75,1.25) -- (1.75,0.25);
+				\draw[fill=black,opacity=0.2,draw=black] (1.5,0) -- (2.5,0) -- (2.5,1) -- (1.5,1) -- (1.5,0);
+				
+				\node at (4.5,-1){\begin{tabular}{c}pooling layer\\layer $l = 3$\end{tabular}};
+				
+				\draw[fill=black,opacity=0.2,draw=black] (5,1.25) -- (5.75,1.25) -- (5.75,2) -- (5,2) -- (5,1.25);
+				\draw[fill=black,opacity=0.2,draw=black] (4.75,1) -- (5.5,1) -- (5.5,1.75) -- (4.75,1.75) -- (4.75,1);
+				\draw[fill=black,opacity=0.2,draw=black] (4.5,0.75) -- (5.25,0.75) -- (5.25,1.5) -- (4.5,1.5) -- (4.5,0.75);
+				\draw[fill=black,opacity=0.2,draw=black] (4.25,0.5) -- (5,0.5) -- (5,1.25) -- (4.25,1.25) -- (4.25,0.5);
+				\draw[fill=black,opacity=0.2,draw=black] (4,0.25) -- (4.75,0.25) -- (4.75,1) -- (4,1) -- (4,0.25);
+				\draw[fill=black,opacity=0.2,draw=black] (3.75,0) -- (4.5,0) -- (4.5,0.75) -- (3.75,0.75) -- (3.75,0);
+				
+				\node at (7,3.5){\begin{tabular}{c}convolutional \\ layer $l = 4$\end{tabular}};
+				
+				\draw[fill=black,opacity=0.2,draw=black] (7.5,1.75) -- (8.25,1.75) -- (8.25,2.5) -- (7.5,2.5) -- (7.5,1.75);
+				\draw[fill=black,opacity=0.2,draw=black] (7.25,1.5) -- (8,1.5) -- (8,2.25) -- (7.25,2.25) -- (7.25,1.5);
+				\draw[fill=black,opacity=0.2,draw=black] (7,1.25) -- (7.75,1.25) -- (7.75,2) -- (7,2) -- (7,1.25);
+				\draw[fill=black,opacity=0.2,draw=black] (6.75,1) -- (7.5,1) -- (7.5,1.75) -- (6.75,1.75) -- (6.75,1);
+				\draw[fill=black,opacity=0.2,draw=black] (6.5,0.75) -- (7.25,0.75) -- (7.25,1.5) -- (6.5,1.5) -- (6.5,0.75);
+				\draw[fill=black,opacity=0.2,draw=black] (6.25,0.5) -- (7,0.5) -- (7,1.25) -- (6.25,1.25) -- (6.25,0.5);
+				\draw[fill=black,opacity=0.2,draw=black] (6,0.25) -- (6.75,0.25) -- (6.75,1) -- (6,1) -- (6,0.25);
+				\draw[fill=black,opacity=0.2,draw=black] (5.75,0) -- (6.5,0) -- (6.5,0.75) -- (5.75,0.75) -- (5.75,0);
+				
+				\node at (9.5,-1){\begin{tabular}{c}pooling layer\\layer $l = 6$\end{tabular}};
+				
+				\draw[fill=black,opacity=0.2,draw=black] (10,1.75) -- (10.5,1.75) -- (10.5,2.25) -- (10,2.25) -- (10,1.75);
+				\draw[fill=black,opacity=0.2,draw=black] (9.75,1.5) -- (10.25,1.5) -- (10.25,2) -- (9.75,2) -- (9.75,1.5);
+				\draw[fill=black,opacity=0.2,draw=black] (9.5,1.25) -- (10,1.25) -- (10,1.75) -- (9.5,1.75) -- (9.5,1.25);
+				\draw[fill=black,opacity=0.2,draw=black] (9.25,1) -- (9.75,1) -- (9.75,1.5) -- (9.25,1.5) -- (9.25,1);
+				\draw[fill=black,opacity=0.2,draw=black] (9,0.75) -- (9.5,0.75) -- (9.5,1.25) -- (9,1.25) -- (9,0.75);
+				\draw[fill=black,opacity=0.2,draw=black] (8.75,0.5) -- (9.25,0.5) -- (9.25,1) -- (8.75,1) -- (8.75,0.5);
+				\draw[fill=black,opacity=0.2,draw=black] (8.5,0.25) -- (9,0.25) -- (9,0.75) -- (8.5,0.75) -- (8.5,0.25);
+				\draw[fill=black,opacity=0.2,draw=black] (8.25,0) -- (8.75,0) -- (8.75,0.5) -- (8.25,0.5) -- (8.25,0);
+				
+				\node at (12,3.5){\begin{tabular}{c}dense layer\\layer $l = 7$\end{tabular}};
+				
+				\draw[fill=black,draw=black,opacity=0.5] (10.5,0) -- (11,0) -- (12.5,1.75) -- (12,1.75) -- (10.5,0);
+				
+				\node at (13,-1){\begin{tabular}{c}dense output \\ layer $l = 8$\end{tabular}};
+				
+				\draw[fill=black,draw=black,opacity=0.5] (12.5,0.5) -- (13,0.5) -- (13.65,1.25) -- (13.15,1.25) -- (12.5,0.5);
+			\end{tikzpicture}
+			\caption{The architecture of the original convolutional neural network, as introduced by LeCun et al. (1989), alternates between convolutional layers and pooling layers. The feature maps of the final polling layer are then fed into the actual classifier consisting of an arbitrary number of fully connected layers. The output layer usually uses softmax activation functions.}
+			\label{fig:cnn}
+		\end{figure}
+	
+		As a result a classical CNN will look like Figure \ref{fig:cnn}, with layers of a convolutional layer followed by a pooling layer. Then the there is a flattening step before the input is feed into densely connected layers. In this case we can imagine a network with a softmax function in the output layer to classify the input into a fixed amount of categories. The combination of many types of layers suggests that we are now entering the realm of DP methods.
+		
+		To understand a CNN a bit better, let us discuss the effect of the convolution layer. For each submatrix of the full input we are scanning for features. If we think about animals or humans, this could be features like eyes. Now there could be multiple features in one submatrix, and therefore you usually have multiple feature maps per submatrix. In other words the procedure described in Equation \ref{eq:cnn} is done multiple times and the associated with different weights, one for each feature map. In the case of RGB pictures it is also common practice to have a layer for each color, thus in this case three. So lets say you have and RGB picture and you want to extract 4 features, you would then need 12 feature maps or filters as they are also called.
+		
+		As you are generally reducing the input seize with convolution and poolings layers, you are naturally increasing the scale of the feature detection of the convolution layer, because you kernel is the same size and your layer input is containing information about a larger area. That creates a hierarchy of how the learning is done. In the first layers the network captures small features and then the subsequent layers capture larger features.
+		
+		Regarding compute, there one should consider using GPU resources when using of networks with CNN features. The computations related to convolution and pooling layers are very simple, but involve a lot of computations. This allows for effective parallelization with modern GPUs, as they have an abundance of cores at the order of $10^3$ compared to CPUs with core numbers typically at the order of $10^1$. In particular modern GPUs tensor cores are highly efficient at these types of workloads. 
+		
+	\subsection{Recurrent neural networks}
+		In certain applications such as speech recognition, and other cases with time dependence, the previous input value may be correlated with the subsequent value. This is something a usual DNN or CNN cannot take into account at the neuron level. This requires the neuron to have some memory. To achieve this one can make use of recurrent neurons to make recurrent neural networks (RNN) \cite{schmidt:2019}.
+		
+		The simplest way to incorporate memory is to modify the neuron to store the previous output and include it in the current input. In this way, the historical output is used for the current evaluation in the neuron. This concept of recurrent neurons is illustrated in Figure \ref{fig:recurrent-node}. Mathematically the math in the neuron changes in the following way,
+		\begin{gather}
+			a(z_j(x_i)) = f(w_{ij, 1}x_i + w_{ij, 2}h_{i-1} + b_j \cdot \vec{1}),
+		\end{gather}
+		where $h_{i-1}$ is the hidden state associated with the previous output of the neuron. The hidden state generally captures an encoding of the most recent neuron computation. This hidden state is a new object in recurrent neurons and it allows for short term memory in the neurons. Since both $x_1$ and $h_i$ are inputs to the function, they both get a weight matrix associated to them.
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}[item/.style={circle,draw,thick,align=center},
+				itemc/.style={item,on chain,join}]
+				\begin{scope}[start chain=going right,nodes=itemc,every
+					join/.style={-latex,very thick},local bounding box=chain]
+					\path node (A0) {$A$} node (A1) {$A$} node (A2) {$A$} node[xshift=2em] (At)
+					{$A$};
+				\end{scope}
+				\node[left=1em of chain,scale=2] (eq) {$=$};
+				\node[left=2em of eq,item] (AL) {$A$};
+				\path (AL.west) ++ (-1em,2em) coordinate (aux);
+				\draw[very thick,-latex,rounded corners] (AL.east) -| ++ (1em,2em) -- (aux) 
+				|- (AL.west);
+				\foreach \X in {0,1,2,t} 
+				{\draw[very thick,-latex] (A\X.north) -- ++ (0,2em)
+					node[above,item,fill=red!10] (h\X) {$h_\X$};
+					\draw[very thick,latex-] (A\X.south) -- ++ (0,-2em)
+					node[below,item,fill=green!10] (x\X) {$x_\X$};}
+				\draw[white,line width=0.8ex] (AL.north) -- ++ (0,1.9em);
+				\draw[very thick,-latex] (AL.north) -- ++ (0,2em)
+				node[above,item,fill=red!10] {$h_t$};
+				\draw[very thick,latex-] (AL.south) -- ++ (0,-2em)
+				node[below,item,fill=green!10] {$x_t$};
+				\path (x2) -- (xt) node[midway,scale=2,font=\bfseries] {\dots};
+			\end{tikzpicture}
+			\caption{Illustration of recurrent neurons using the previous output as input for the current node computation.}
+			\label{fig:recurrent-node}
+		\end{figure}
+		
+		One of the limitations of the simple recurrent neuron is that it only takes into account the previous output. This means we are limited to short-term memory. Using more complex logic it is possible to achieve long-term memory, and for this one can use long short-term memory (LSTM) layers. These layers a significantly more complex and compute-intensive, but the long term cells in these layers are capable of storing information long-term. Such models are useful in the case where there are long-term memory is needed to obtain the correct prediction.
+		
+		A LSTM layer is a layer of LSTM cells, with each cell containing the more complex logic as shown in Figure \ref{fig:lstm}. To understand this cell we need to consider the different inputs it takes and the outputs it yields:
+		\begin{itemize}
+			\item $x_i$: The current input to the cell
+			\item $h_{i-1}$: The hidden state input to the cell
+			\item $c_{i-1}$: The cell state input to the cell
+			\item $h_{i}$: The hidden state output of the cell
+			\item $c_{i}$: The cell state output of the cell
+		\end{itemize}
+		Compared to the simple recurrent neuron, the LSTM cell contains a new object which is the cell state. This is the object that holds long term memory that forms across many inputs unlike the hidden state which contains information related to the previous input. It is the updating and handling of the cell state that makes the LSTM cell much more complex due to the logic behind updating and using it.
+		
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}[
+				% GLOBAL CFG
+				font=\sf \scriptsize,
+				>=LaTeX,
+				% Styles
+				cell/.style={% For the main box
+					rectangle, 
+					rounded corners=5mm, 
+					draw,
+					very thick,
+				},
+				operator/.style={%For operators like +  and  x
+					circle,
+					draw,
+					inner sep=-0.5pt,
+					minimum height =.2cm,
+				},
+				function/.style={%For functions
+					ellipse,
+					draw,
+					inner sep=1pt
+				},
+				ct/.style={% For external inputs and outputs
+					circle,
+					draw,
+					line width = .75pt,
+					minimum width=1cm,
+					inner sep=1pt,
+				},
+				gt/.style={% For internal inputs
+					rectangle,
+					draw,
+					minimum width=4mm,
+					minimum height=3mm,
+					inner sep=1pt
+				},
+				mylabel/.style={% something new that I have learned
+					font=\scriptsize\sffamily
+				},
+				ArrowC1/.style={% Arrows with rounded corners
+					rounded corners=.25cm,
+					thick,
+				},
+				ArrowC2/.style={% Arrows with big rounded corners
+					rounded corners=.5cm,
+					thick,
+				},
+				]
+				
+				%Start drawing the thing...    
+				% Draw the cell: 
+				\node [cell, minimum height =4cm, minimum width=6cm] at (0,0){} ;
+				
+				% Draw inputs named ibox#
+				\node [gt] (ibox1) at (-2,-0.75) {$\sigma$};
+				\node [gt] (ibox2) at (-1.5,-0.75) {$\sigma$};
+				\node [gt, minimum width=1cm] (ibox3) at (-0.5,-0.75) {Tanh};
+				\node [gt] (ibox4) at (0.5,-0.75) {$\sigma$};
+				
+				% Draw opérators   named mux# , add# and func#
+				\node [operator] (mux1) at (-2,1.5) {$\times$};
+				\node [operator] (add1) at (-0.5,1.5) {+};
+				\node [operator] (mux2) at (-0.5,0) {$\times$};
+				\node [operator] (mux3) at (1.5,0) {$\times$};
+				\node [function] (func1) at (1.5,0.75) {Tanh};
+				
+				% Draw External inputs? named as basis c,h,x
+				\node[ct, label={[mylabel]Cell}] (c) at (-4,1.5) {$c_{i-1}$};
+				\node[ct, label={[mylabel]Hidden}] (h) at (-4,-1.5) {$h_{i-1}$};
+				\node[ct, label={[mylabel]left:Input}] (x) at (-2.5,-3) {$x_{i}$};
+				
+				% Draw External outputs? named as basis c2,h2,x2
+				\node[ct, label={[mylabel]Label1}] (c2) at (4,1.5) {$c_{i}$};
+				\node[ct, label={[mylabel]Label2}] (h2) at (4,-1.5) {$h_{i}$};
+				\node[ct, label={[mylabel]left:Label3}] (x2) at (2.5,3) {$h_{i}$};
+				
+				% Start connecting all.
+				%Intersections and displacements are used. 
+				% Drawing arrows    
+				\draw [ArrowC1] (c) -- (mux1) -- (add1) -- (c2);
+				
+				% Inputs
+				\draw [ArrowC2] (h) -| (ibox4);
+				\draw [ArrowC1] (h -| ibox1)++(-0.5,0) -| (ibox1); 
+				\draw [ArrowC1] (h -| ibox2)++(-0.5,0) -| (ibox2);
+				\draw [ArrowC1] (h -| ibox3)++(-0.5,0) -| (ibox3);
+				\draw [ArrowC1] (x) -- (x |- h)-| (ibox3);
+				
+				% Internal
+				\draw [->, ArrowC2] (ibox1) -- (mux1);
+				\draw [->, ArrowC2] (ibox2) |- (mux2);
+				\draw [->, ArrowC2] (ibox3) -- (mux2);
+				\draw [->, ArrowC2] (ibox4) |- (mux3);
+				\draw [->, ArrowC2] (mux2) -- (add1);
+				\draw [->, ArrowC1] (add1 -| func1)++(-0.5,0) -| (func1);
+				\draw [->, ArrowC2] (func1) -- (mux3);
+				
+				%Outputs
+				\draw [-, ArrowC2] (mux3) |- (h2);
+				\draw (c2 -| x2) ++(0,-0.1) coordinate (i1);
+				\draw [-, ArrowC2] (h2 -| x2)++(-0.5,0) -| (i1);
+				\draw [-, ArrowC2] (i1)++(0,0.2) -- (x2);
+				
+			\end{tikzpicture}
+			\caption{A diagram of the LSTM cell with an input, a hidden state, and a cell state with internal logic to update the states.}
+			\label{fig:lstm}
+		\end{figure}
+		
+		There are three main logical gates computed in the LSTM cell. The first to consider it he forget gate $f_{\rm{forget}}$. This gate considers the input $x_i$ and the hidden state $h_{i-1}$. Here the computation is as follows,
+		\begin{gather}
+			f_{\rm{forget}}(x_i, h_{i-1}) = \sigma \paa{w_{ij, 1}x_i + w_{ij, 2}h_{i-1} + b_j \cdot \vec{1}},
+		\end{gather}
+		which is then multiplied to the cell state $c_{i-1}$ to get a scaled cell state $c_{i-1}'$,
+		\begin{gather}
+				c_{i-1}' = f_{\rm{forget}}(x_i, h_{i-1}) c_{i-1}.
+		\end{gather}
+		Since $0 \le f_{\rm{forget}} \le 1$ the result of the forget gate is to decide how much of the past should be forgotten, with $ f_{\rm{forget}} \sim 1$ yielding a minimal change of the cell state $c_{i-1}' \sim c_{i-1}$. On the other hand $ f_{\rm{forget}} \ll 1$ yields $c_{i-1}' \sim  0$, thus wiping the long term memory clean.
+		
+		The next gate is the input gate $f_{\rm{input}}$ which computes a quantity like $f_{\rm{forget}}$ and multiplies it with a similar function where the tanh function is used,
+		\begin{gather}
+			f_{\rm{input}} =\sigma \paa{w_{ij, 3}x_i + w_{ij, 4}h_{i-1} + b_j \cdot \vec{1}} \cdot \tanh \paa{w_{ij, 5}x_i + w_{ij, 6}h_{i-1} + b_j \cdot \vec{1}},
+		\end{gather}
+		where one can either do a point or piece wise multiplication of the two objects. The part with the sigmoid function can be considered as a scaling term like in the forget gate, and the part with the tanh function is the normalized encoding of the input plus the hidden state. The cell state is then updated,
+		\begin{gather}
+			c_{i} = c_{i-1}' + f_{\rm{input}},
+		\end{gather}
+		and that cell state is then used in the next input step and to compute $h_i$ in the last gate, the output gate $f_{\rm{output}}$. This gate has the same components as the previous gate,
+		\begin{gather}
+			f_{\rm{output}} =\sigma \paa{w_{ij, 7}x_i + w_{ij, 8}h_{i-1} + b_j \cdot \vec{1}} \cdot \tanh \paa{w_{ij, 9}c_i + b_j \cdot \vec{1}} = h_i,
+		\end{gather}
+		and the result is the new hidden state which is also the output of the LSTM cell. Note that the output gate contains both the input, hidden state and the updated cell state.
+		
+		In the LSTM cell we have 9 weight matrices and a lot of biases to train. Likewise we have a lot of logic to process. This means that these cells are computationally much more intense compared to a simple neuron. Due to the extra complexity, it is often favorable to use CPU cores to deal with LSTM networks as their more powerful cores outclass the parallelization which CPUs offer.
+	
+	\subsection{Reservoir computing}
+		If you have no clue what a suitable architecture is and you need memory, you might want to try out reservoir computing. This is an actively evolving field where we take even more inspiration from biology, in particular the human brain.
+		
+		The concept is as follows, you take a bunch of neurons, which could be recurrent neurons with memory, and then connect them sparse. The result is hundreds or thousands of neurons connected randomly to each other, not densely and not in a particular way. This is similar to how neurons in our brains are connected. Human neurons only connect to a handful of neurons in the vicinity. The same is idea of reservoir computing, this construction of randomly connected neurons is our reservoir. On its own, this cannot achieve anything, you just have a $N$ neurons. 
+		
+		Next consider some input signal $u(t) \in \mathbb{R}^{N_u}$ which we connect to $N_u$ neurons in the reservoir with weights $W^{\rm{in}}$. The reservoir's reservoir's high-dimensional are given as $X(t) \in \mathbb{R}^N$ and randomly initialized weight $W$, and in this reservoir there are states accessible for read out $x(t) \in \mathbb{R}^{N_x}$ where $N_u + N_x \ll N$ with wights $W^{\rm{out}}$. 
+		
+		The prediction $\hat{y}$ can then be defined as,
+		\begin{gather}
+			\hat{y} = g \paa{W^{\rm{out}} x(t)},\\
+			x(t) = f\paa{W x(t) + W^{\rm{in}} u(t)} ,
+		\end{gather}
+		with $f$ and $g$ being two activation functions.
+		
+		It is possible to then train the network in a supervised way, or in other ways. The key to this method is that one does not train the reservoir, thus $W$ is fixed, but on can train $W^{\rm{in}}$ and $W^{\rm{out}}$ for inputs $u$ and true outputs $y$. We are thus optimizing how we write and read to the reservoir. It is also possible to have ANN's connected before and after the reservoir, and that ANN may be fully trainable too. The main idea is simply that we do not care about optimizing the reservoir itself, but rather our interaction with it. It is possible to try to train the reservoir itself, with on of the more straight forward methods would be using genetic learning.
+	
+	\subsection{Exercises}
+		In this week the exercises allow you get practical experience with different types of networks using examples from \texttt{tensorflow}. We look doing image classification of using ANNs and CNNs to compare the practicality of the different methods. The first two exercises use the CIFAR10 dataset containing 60,000 color images in 10 classes, with 6,000 images in each class. The dataset is divided into 50,000 training images and 10,000 testing images. The classes are mutually exclusive and there is no overlap between them. Then we consider text classification with memory. Be careful with overfitting! These example should give you a practical feel for the practicality of different methods in different situations. The code for this week and be found in the folder \texttt{week 3}.\newline
+		
+		\textbf{Exercise 1: ANN image classification}\newline
+		In this exercise you need to construct a ANN that can correctly classify the image specified in the script \texttt{ann.py}. Note you need to flatten the input first before you can use dense layers. How many parameters to you need to obtain an accuracy of 30\%, 40\% or 50\%?\newline
+		
+		\textbf{Exercise 2: CNN image classification}\newline
+		In this exercise you need to construct a CNN that can correctly classify the image specified in the script \texttt{cnn.py}. How many parameters to you need to obtain an accuracy of 60\%, 70\% or 80\%? Compare the results to the ANN network. How is the performance and how do the parameter number differ? \newline
+		
+		\textbf{Exercise 3: Text classification}\newline
+		In this exercise you need to classify text. This example used IMDB data and the goal is to determine if a text represent a negative or positive review. This is called sentiment analysis. Because we are working with text, we again need to consider encoding and also tokenization. The latter concept is beyond this lesson and you may study it if you are interested. The code for this exercise is in \texttt{text.py} and you need to construct a network with memory. To get started you are presented with the initial encoding and embedding layer and then it is up to you to implement layers such as bidirectional, recurrent neuron, and LSTM layers. To make RNN layers you can use subclassing, check the \texttt{keras} or \texttt{tensorflow} documentation on how to do it. Note LSTM layers are very compute heavy and you generally don't need a lot of them. The code may produce errors that have no functional meaning, they relate to the import method of the dataset. Can yo reach 90\% accuracy?
 		
 		
 % -------------------------------------------------------------------

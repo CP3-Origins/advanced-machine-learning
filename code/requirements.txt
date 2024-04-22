@@ -2,3 +2,4 @@ keras
 scikit-learn
 matplotlib
 tensorflow
+tensorflow-datasets
