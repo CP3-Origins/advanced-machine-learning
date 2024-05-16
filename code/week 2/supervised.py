@@ -16,8 +16,33 @@ class NeuralSolver:
         x, y = self.generate_data()
 
         # TODO: Use x, y as input and then train a supervised model
-        self.model = "define_your_model"
-
+        X_train, X_test, y_train, y_test = train_test_split(
+            x,
+            y,
+            test_size=0.2,
+            random_state=42
+        )
+        # Network Parameters
+        # TODO: Build a suitable network and set the hyperparamters
+        self.optimizer = tf.keras.optimizers.Adam(
+            learning_rate=0.01,
+            beta_1=0.9,
+            beta_2=0.999,
+            epsilon=1e-07,
+            amsgrad=False,
+            name='Adam',
+        )
+        self.model = Sequential(
+            [
+                Input(shape=(1,)),
+                Dense(32, activation="relu", name="layer1"),
+                Dense(32, activation="relu", name="layer2"),
+                Dense(32, activation="relu", name="layer3"),
+                Dense(1, name="output"),
+            ]
+        )
+        self.model.compile(optimizer=self.optimizer, loss='mse', metrics=['accuracy'])
+        self.model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2)
         print(self.model.summary())
 
     def generate_data(self):

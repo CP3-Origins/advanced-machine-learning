@@ -1290,18 +1290,243 @@ else:
 		It is possible to then train the network in a supervised way, or in other ways. The key to this method is that one does not train the reservoir, thus $W$ is fixed, but on can train $W^{\rm{in}}$ and $W^{\rm{out}}$ for inputs $u$ and true outputs $y$. We are thus optimizing how we write and read to the reservoir. It is also possible to have ANN's connected before and after the reservoir, and that ANN may be fully trainable too. The main idea is simply that we do not care about optimizing the reservoir itself, but rather our interaction with it. It is possible to try to train the reservoir itself, with on of the more straight forward methods would be using genetic learning.
 	
 	\subsection{Exercises}
-		In this week the exercises allow you get practical experience with different types of networks using examples from \texttt{tensorflow}. We look doing image classification of using ANNs and CNNs to compare the practicality of the different methods. The first two exercises use the CIFAR10 dataset containing 60,000 color images in 10 classes, with 6,000 images in each class. The dataset is divided into 50,000 training images and 10,000 testing images. The classes are mutually exclusive and there is no overlap between them. Then we consider text classification with memory. Be careful with overfitting! These example should give you a practical feel for the practicality of different methods in different situations. The code for this week and be found in the folder \texttt{week 3}.\newline
+		In this week the exercises allow you get practical experience with different types of networks using examples from \texttt{tensorflow}. We look doing image classification of using ANNs and CNNs to compare the practicality of the different methods. The first two exercises use the CIFAR10 dataset containing 60,000 color images in 10 classes, with 6,000 images in each class. The dataset is divided into 50,000 training images and 10,000 testing images. The classes are mutually exclusive and there is no overlap between them. Then we consider text classification with memory. Be careful with over-fitting! These example should give you a practical feel for the practicality of different methods in different situations. The code for this week and be found in the folder \texttt{week 3}.\newline
 		
 		\textbf{Exercise 1: ANN image classification}\newline
-		In this exercise you need to construct a ANN that can correctly classify the image specified in the script \texttt{ann.py}. Note you need to flatten the input first before you can use dense layers. How many parameters to you need to obtain an accuracy of 30\%, 40\% or 50\%?\newline
+		In this exercise you need to construct a ANN that can correctly classify the image specified in the script \texttt{ann.py}. Note you need to flatten the input first before you can use dense layers and build your network where the \texttt{TODO} comment is. How many parameters to you need to obtain an accuracy of 30\%, 40\% or 50\%?\newline
 		
 		\textbf{Exercise 2: CNN image classification}\newline
-		In this exercise you need to construct a CNN that can correctly classify the image specified in the script \texttt{cnn.py}. How many parameters to you need to obtain an accuracy of 60\%, 70\% or 80\%? Compare the results to the ANN network. How is the performance and how do the parameter number differ? \newline
+		In this exercise you need to construct a CNN that can correctly classify the image specified in the script \texttt{cnn.py} where the \texttt{TODO} comment is. How many parameters to you need to obtain an accuracy of 60\%, 70\% or 80\%? Compare the results to the ANN network. How is the performance and how do the parameter number differ? \newline
 		
 		\textbf{Exercise 3: Text classification}\newline
-		In this exercise you need to classify text. This example used IMDB data and the goal is to determine if a text represent a negative or positive review. This is called sentiment analysis. Because we are working with text, we again need to consider encoding and also tokenization. The latter concept is beyond this lesson and you may study it if you are interested. The code for this exercise is in \texttt{text.py} and you need to construct a network with memory. To get started you are presented with the initial encoding and embedding layer and then it is up to you to implement layers such as bidirectional, recurrent neuron, and LSTM layers. To make RNN layers you can use subclassing, check the \texttt{keras} or \texttt{tensorflow} documentation on how to do it. Note LSTM layers are very compute heavy and you generally don't need a lot of them. The code may produce errors that have no functional meaning, they relate to the import method of the dataset. Can yo reach 90\% accuracy?
+		In this exercise you need to classify text. This example used IMDB data and the goal is to determine if a text represent a negative or positive review. This is called sentiment analysis. Because we are working with text, we again need to consider encoding and also tokenization. The latter concept is beyond this lesson and you may study it if you are interested. The code for this exercise is in \texttt{text.py} and you need to construct a network with memory where the \texttt{TODO} comment is. To get started you are presented with the initial encoding and embedding layer and then it is up to you to implement layers such as bidirectional, recurrent neuron, and LSTM layers. To make RNN layers you can use subclassing, check the \texttt{keras} or \texttt{tensorflow} documentation on how to do it. Note LSTM layers are very compute heavy and you generally don't need a lot of them. The code may produce errors that have no functional meaning, they relate to the import method of the dataset. Can yo reach 90\% accuracy?
 		
+\section{Physics guidance in neural networks}
+	In this lecture we look at ways of mitigating problems related to neural networks. In particular, we look at how physics can help us and how we can solve physics problems with neural networks. To do this we need to look closer at the cost function, simulation and architectures that leverage this physical constraints of the problem.
+	
+	Before moving on with solutions, let us remind ourselves with some of the problems we have encountered so far:
+	\begin{itemize}
+		\item Lack of training data
+		\item Over-fitting
+		\item Failure to learn the underlying function
+		\item Slow learning
+		\item Poor results
+	\end{itemize}
+	Before looking and solutions from physics, let us consider a few general methods to consider.
+	
+	\subsection{Non-physics optimizations}
+		When trying to tackle any problem wit a neural network, we should always start by considering what architecture is optimal. Should you use an ANN, CNN, RNN, or some other network architecture?
 		
+		If your input is tabular data, like what you find in a spreadsheet and the problem at hand is regression or classification, then you might be fine with an ANN. This includes text date, image data (though generally not images themselves), time series data, and other types of data where the input size is not more than $<\mathcal{O}(10^3)$.  
+		
+		In the case you want to handle images and videos and consider regression or classification problems, then you would use CNN elements. You can also use a CNN for text data, time series data and sequence input data. This method is advantageous in the sense that it can handle large input sizes. 
+		
+		If you face mapping problems such as one-to-many, many-to-one or many-to-many, then RNN or LSTM methods can be useful. In particular this is useful for dataset of text data, speech data, classification and regression problems, and generative models. Do not use it for tabular or image data.
+		
+		Reservoir computing can also be used generally on classification and regression problems, and it has the advantage of being more effective in terms of training as you do not train the reservoir itself. This result in lower costs and more efficient computing.
+		
+		\subsubsection{The cost function}
+			Before moving on let us take another look at the cost function. Recall, the cost function is object that is used for training and contains at least one loss function. 
+			
+			As discussed earlier, the choice of a loss function can have an impact on training time. For example the MSE is generally good at penalizing large deviations above one, but for small deviations the MAE is more effective. Other functions also exist with the own pros and cons, and it is always important to select an appropriate loss function to speed up the training. Note that the choice also depend on whether you are doing regression or classification.
+			
+			In principle you can have multiple loss functions, though it rarely improves the situation to just simply chain two loss function together as one of them will generally just dominate. Also, there can be stability issues if the two loss functions you optimize push the network in different directions.
+			
+			What is often more meaningful is to have different loss function acting on different outputs, or you can have loss functions that checks intermediate results on top of the final results. We will talk more about that in the context of applying physics to our training methods.
+			
+			The last thing to mention is regularization. This is a method of penalizing the general use of weights and trainable parameters. It is used to combat over-fitting as regularization pushes the network to set trainable parameters to zero, effectively removing them from the equation. With less parameters to train, the complexity the model can take is reduced.
+			
+			There are two very common methods of regularization which one can use. One is lasso regression also called L1 regularization,
+			\begin{gather}
+				L_1 = \lambda \sum_{j=1}^n \abs{\Theta_j},
+			\end{gather}
+			where we sum over the absolute value of the trainable parameters $\Theta_j$ of the model and then we have a scale factor $\lambda$. Note that this generally mean that you will have a non-zero cost function even for a perfect training result as you will have non-zero trainable parameters. 
+			
+			Another common regularization method is ridge regression  also called L2 regularization. In this method the math writes,
+			\begin{gather}
+				L_2 = \lambda \sum_{j=1}^n \Theta_j^2,
+			\end{gather}
+			where we are now squaring the trainable parameters $\Theta_j$, and there is still the scale factor $\lambda$. One thing to note here is that the L1 method is better for pushing weights to zero, as the L2 method doesn't penalize values below one very hard. On the other hand the L2 method penalizes large parameter values harder.
+		
+	\subsection{Physics optimizations}
+		Physics is based on mathematics, which is full of possible combinations of functions and possibilities. We have however seen, that nature of tends to fit well with reasonably simple mathematical equations. As an example we can consider the Lagrangian which is just an equation of energy,
+		\begin{gather}
+			\mathcal{L} = \frac{1}{2}m\dot{x}^2 - \frac{1}{2}k x^2.
+		\end{gather}
+		You might recognize this as equation of motion of a spring. The mathematics here is quite limited, just two terms with some derivative of the coordinate, constants and some power laws. Considering what mathematics exists, it could have been much worse.
+		
+		The point is, the real world has a lot of physics constraints, and this can often make the situation much simpler. Having this domain knowledge from understanding the underlying physics can often help us. Add to that that we might often know good models for issues we want to apply machine learning to, and we can leverage that to speed up training and make the resulting models more precise. 
+	
+		\subsubsection{Physical cost functions}
+			One of the simpler ways we can apply this domain knowledge is via the cost function. Instead of just using standard loss functions like MSE or techniques like L2 regularization, we can implement terms that specifically leverage physical knowledge of the system such as conservation of energy. If you can penalize your prediction by violation of conservation, you have way of excluding nonphysical behavior and thus get a more realistic and robust model.
+			
+			In general, we can consider some physically inspired cost function, in some general form,
+			\begin{gather}\label{eq:physics_loss}
+				J(\theta) = \frac{1}{m} \sum_{i=1}^m \mathcal{L}_{loss}\paa{\hat{Y}_i, Y_i} + \lambda R(\theta) + \lambda_{phy} \frac{1}{m}  \sum_{i=1}^m \mathcal{L}_{phy}(\hat{Y}_i),
+			\end{gather}
+			where $m$ is the batch number, $\mathcal{L}_{loss}$ is our loss function of choice, $\lambda$ and $\lambda_{phy}$ are hyperparameters for the two physics terms, $R(\theta)$ is a function of the model parameters evaluating parameter constraints, such as complexity, and $\mathcal{L}_{phy}$ is a physical reality check of the predicted value \cite{daw:2017}.
+			
+			In Equation \ref{eq:physics_loss} there is the usual loss term, but also two additional terms where one can generally incorporate physical checks on the model parameters and the predicted value. The function $R(\Theta)$ of the model parameters is regulated in strength by $\lambda$. This may be a function of certain weights which shouldn't be positive or negative or there sum should be some certain value, or simply we might just want to penalize weight parameter similarly to a usual regularization term. We can consider this a physics inspired regularization term, which we set because we have some domain knowledge of what the parameters should yield.
+			
+			In the last term, we can consider constraints on the result, maybe even taking into account the inputs, $X$, to compute some conservation of energy constraint on the result. Depending on the problem at hand, then the input may put certain limits on what the output is allowed to be, and this can be used to enhance the learning \cite{stewart:2016}. In many cases there could be more physics-inspired loss terms than in the example of Equation \ref{eq:physics_loss}  \cite{fukami:2019}.
+			
+			A concrete example of using a physics-inspired loss function is in the case of modeling lake water temperatures at different depths. In this case, one can consider a neural network with LSTM layers, as we need memory to incorporate the effect of the previous step regarding the depth \cite{jia:2018, read:2019}. For example, the water pressure only increases at lower depths, and depending on the season, the water temperature may decrease at lower depths in warmer months.
+			
+			As we are interested in modeling temperature over time at different depths, one can consider a physics inspired MSE style loss function of the form,
+			\begin{gather}
+				\mathcal{L}_{loss}(\hat{Y}, Y) = \frac{1}{N_d T} \sum_{t=0}^T \sum_{d=0}^{N_d} \paa{\hat{Y}_{t,d} - Y_{t,d}},
+			\end{gather}
+			where $N_d$ is the number of different depths, and $T$ is the number of temperature steps. In this case, we have a physical system with electromagnetic radiation adding heat to the lake and some heat will be lost to the surroundings. In general, there are different physical aspects to take care of, but they can be incorporated in the total flux, $\Delta U_t$, and the sum of heat flux, $\mathcal{F}$, to track the heat \cite{jia:2018}.
+			
+			In this case we use domain knowledge relating to radiation and heat dissipation, and make a physical model of what the total flux of energy is to the lake. Thus, we consider how much energy comes in and how much goes out of the lake to have a physical value of what $\Delta U_t$ should be. Then, the sum of heat flux, $\mathcal{F}$ is monitoring the predicted heat flux from our neural network. With this we can track that the ML model is not braking energy conservation by demanding that $\abs{\Delta U_t - \mathcal{F}} \approx 0 $. Thus whatever energies that the lake has in the different depths etc. it has to be related to the energy coming in and going out based on our physically established model.
+			
+			We are leveraging the fact that we can reliable model what energy goes in and out of our system, the lake, but we do not know how the energy is stored inside the lake. What is the lake temperature at different depths in different places?
+			
+			In this case, we can define a loss function for this energy condition encoded in a constraint that looks something like,
+			\begin{gather}\label{eq:conservation_loss}
+				\mathcal{L}_{EC}(\Delta U_t, \mathcal{F}) \sim \rm{ReLu}\paa{\abs{\Delta U_t - \mathcal{F}} - \tau_{EC}},
+			\end{gather}
+			where $\tau_{EC}$ is the threshold value to allow for uncertainties in our model. Since we consider the absolute value, we consider any deviation from the physically expected total flux. The physical model will have uncertainty so we can take care of that by subtracting the uncertainty. If the value in the ReLu function is below zero we just just zero, and thus a zero loss. In this way we get penalties when the deviation is beyond the threshold only
+			
+			Since the water pressure, $\Delta \rho$, in a physical system only increases with depth, one can also create a loss term that enforces this constraint. We can simply consider the difference,
+			\begin{gather}
+				\Delta \rho_{d,t} = \rho_{d,t} - \rho_{d+1,t}.
+			\end{gather}
+			This results in a cost function of the form,
+			\begin{gather}
+				J(\theta) = \mathcal{L}_{loss}(\hat{Y}, Y) + \lambda_{EC} \mathcal{L}_{EC}(\Delta U_t, \mathcal{F}) + \lambda_{DC} \mathcal{L}_{DC}(\Delta \rho),
+			\end{gather}
+			where the first term is the loss terms in terms of depth and temperature, and the second term contains the energy condition encoded in the loss $ \mathcal{L}_{EC}$, modulated by the hyperparameter $\lambda_{EC}$, and $\mathcal{L}_{DC}$ incorporates the depth constraint, modulated by $\lambda_{DC}$.
+			
+			There are various of different other use cases relating to human needs such as electricity and fresh water. Modeling of these resources is key to efficient use and exploitation of them. For this one can also use ML methods with learning functions that leverage domain knowledge \cite{xiong:2019, xu:2015, daw:2019}. In the latter case one uses statistical learning instead o af neural network highlighting the universality of physics-guided ML methods. 
+			
+			The physics guiding of ML methods is not limited to supervised learning, and it can also be applied to other learning methods such as reinforcement learning. Considering the problem of optimal traffic light control, one is faced with the problem of multiple states and the best way of switching between them. In this case, real-world knowledge can help with solving the problem, and a domain-informed training procedure can yield solid results \cite{xiong:2019}. 
+			
+		\subsubsection{Hybrid architecture}
+			Another approach we can do beyond just making physics guided cost functions is to consider it in the architecture of the network or model. Let's say you are considering a physical system which be described with some model $\rho$. Unfortunately, this model does not take into account all aspects of the system. In this case one can consider a method like Knowledge-based Residual Learning \cite{zheng:2021}. This idea is that the ideal model, $F$, can be composed of the incomplete physical model and a residual neural network $G$,
+			\begin{gather}
+				F = \rho + G(\Theta),
+			\end{gather}
+			with some trainable parameter, $\Theta$, that needs to be trained. It has been shown in many cases, that complimenting the neural network with domain knowledge yields a more robust result and usually also a faster training procedure. This makes sense, because we have done some of the training but introducing knowledge to the system.
+			
+			We, thus, have some driver parameters, $x_i$, that we give our model $\rho$ and the neural network $G$. Then we concatenate the result together to yield the prediction $\hat{y}$. And then we train the parameters $\Theta$ as usual, for example with supervised learning.
+			
+			If we just use a black-box network, then we will just have a function that will mimic the residue. But in principle one can pair this with a symbolic regression ML method and try to even recover a symbolic equation. In this way, we can use ML methods to learn corrections to our physical model.
+		
+		\subsubsection{Physics architecture}
+			One can include domain knowledge in the architecture of the network itself. This often requires detailed knowledge of how the problem should be computed, and an understanding of different aspects of the physics problem at hand. It is in many cases possible to make a network architecture that internally applies physical constraints and domain knowledge. In this way, the network is internally constrained to obey physical concepts.
+			
+			A case study of such an application can be seen considering drag prediction \cite{muralidar:2019}. As this problem deals with fluid dynamics, it is known that we need to be working with quantities such as pressure and velocity. By design, one can create a sublayer with the degrees of freedom corresponding to what the pressure and velocity vector should have based on the underlying physics. These pressure and velocity layers are then used to compute the intermediate result of the pressure force, $F_i^P$, and shear force, $F_i^V$. From the dimensionality, of the problem it is known that the output should be three dimensional. The final result is the addition of these two quantities, thus, the final drag is known to be of the general form,
+			\begin{gather}
+				F_i =  F_i^P + F_i^V,
+			\end{gather}
+			leading to a network architecture where the two penultimate layers should be added to create the output layer. One may also consider rotational and Galilean invariance to improve the results, as such physical invariances enhance the choice of physically meaningful outputs \cite{ling:2016}.
+			
+			With a physics guided architecture we can implement constraints directly into the network. We can also go back to our example of the spring and we want to predict the next position. We can consider the case where we know the velocity, $\dot{x}$ and position, $x$ but not the spring constant, $k$, and mass, $m$. We know the solution to the problem is,
+			\begin{gather}
+				m \ddot{x} = - k x
+			\end{gather}
+			Architecturally we will make two subnets; one that is the kinetic energy, and a function of the velocity, and one that is the potential energy, and a function of the position. 
+			In this case we could make a network to model these value as a trainable parameter $\Theta_k$ and $\Theta_m$. But since we know the law of conservation must hold we can add a loss term like, 
+			\begin{gather}
+				\mathcal{L}_{\rm{Conservation}} = \abs{\frac{1}{2}\Theta_m v^2 - \frac{1}{2}\Theta_k x^2},
+			\end{gather}
+			as optimizing this equation would also ensure conservation of energy.
+		
+		\subsubsection{Simulation}		
+			The growth in data points has been a major driver for enabling the success of neural networks. There are, however, many cases where data is lacking, at least there might not be a complete data set with both $X$ and $Y$ values, inputs and outputs. To bridge the gap when data points are few, one can again make use of physics models.
+			
+			\begin{figure}
+				\centering
+				\begin{tikzpicture}[
+					->, thick,
+					node/.style={circle, fill=teal!60},
+					label/.style={below, font=\footnotesize},
+					]
+					
+					\node[node] (zin) {$\vec z_\text{in}$};
+					\node[node, right=5em of zin] (fake) {$\vec x_\text{fake}$};
+					\draw (zin) -- node[above] {$G(\vec x)$} node[label] {generator} (fake);
+					
+					\draw[<-] (zin) -- node[above] {$p_\theta(\vec z)$} node[label] {latent noise} ++(-3,0);
+					\node[node, above=of fake] (real) {$\vec x_\text{real}$};
+					\draw[<-] (real) -- node[above] {$p_\text{data}(\vec x)$} ++(-3,0);
+					\node[node, right=6em of fake] (D) at ($(fake)!0.5!(real)$) {$\vec x$};
+					\node[right=7em of D] (out) {real?};
+					\draw (D) -- node[above] {$D(\vec x)$} node[label] {discriminator} (out);
+					
+					\coordinate[right=2.5em of fake, circle, fill, inner sep=0.15em] (pt1);
+					\coordinate[right=2.5em of real, circle, fill, inner sep=0.15em] (pt2);
+					
+					\draw[-, dashed] (pt1) edge[bend left] coordinate[circle, fill=orange, inner sep=1mm, pos=0.7] (pt3) (pt2);
+					\draw (fake) -- (pt1) (real) -- (pt2) (pt3) -- (D);
+					
+				\end{tikzpicture}
+				\caption{A diagram of a GAN network. This is a method of making simulated data with a neural network.}
+				\label{fig:gan}
+			\end{figure}
+			
+			One approach that can work, if you have a strong physical model is two make synthetic data, but if you don't have that you can use a Generative Adversarial Network (GAN), which can contain physics guidance. The idea is that you have true images which your generator network tries to imitate, this network can itself be physics-guided. The evaluation is done by a discriminator network, which tries to identify the synthetic data from the real data,
+			
+			In Figure \ref{fig:gan} we see the general layout. We have some true data, $p_{\rm{data}}$ yielding the true output $\vec{x}_{\rm{real}}$. Then we have some latent noise, $p_\Theta$, generated in some controlled way. Then we can make a generator network, $G$, that takes the latent noise as input and creates a simulated output $\vec{x}_{\rm{fake}}$. Then a discriminator network, $D$, attempts to determine which is the real output.
+			
+			In the ideal case, you would end up with the discriminator being incapable of telling the synthetic data and the real data apart. In this way, the fully trained generator can then be used to generate synthetic data, which one can then use for training. This can for example be used to train robots  \cite{bousmalis:2017}, here a simulated picture based on a physical model is the input to the generator that makes the simulation look more real. One can then do pre-training with synthetic data one needs less real data to achieve good results.
+			
+			Pre-training is a step where one generally trains the model on some other data first, before training on the main data. Sometimes it might make sense to freeze some trainable parameters after pre-training. The goal of this process is to teach the network some basics before using the limited real data to learn the details.
+			
+			As discussed previously, the inverse problem is a common problem with applications in different fields, particularly in imaging. For medical purposes, we often seek to make certain images, but phase issues with reconstruction, image quality, and noise \cite{bousmalis:2017}. 
+			
+			Typically, you would use CNN networks to handle the large imagine inputs, but for certain applications, such as super-resolution, GAN architectures may yield further improvements \cite{bousmalis:2017}. A common and practical use for such GAN models is in CT-scan imaging \cite{yang:2020}. It is also possible to use neural networks to reduce noise and improve resolution, which leads the way for making low-dose CT scans \cite{chen:2017}.
+			
+			On the other hand, for reconstruction the problem is often that traditional algorithms are too slow. As a neural network can generally be trained to mimic any function, the point is to speed up the reconstruction by up to orders of magnitude by using neural networks. The problem is training the networks as you often have a limited data set.
+			
+			In some applications, it is however easy to get physical output data, $Y$, but then the input data might be missing. In this case, physics knowledge can be used to convert an output data point to an input data point using the equation,
+			\begin{gather}
+				f = H g,
+			\end{gather}
+			where $f$ is the input, $H$ is the system matrix and $g$ is the output. In this case, it is possible to generate simulated input data from real output data, $Y$, to complete the dataset by using domain knowledge and then train or pre-train the model with the help of partially synthetic data \cite{ahlebæk:2022}.
+			
+			Finally, it is important to mention that one approach of implementing physics guidance doesn't exclude another. Many of the discussed models use more than one method, for example, physics-guided loss functions and architecture. It is in principle also possible to have use cases where all three approaches can be useful. One case study of that is that of the multi-fidelity physics-constrained neural networks (MF-PCNN), which is used for different applications such as heat transfer, phase transitions, and Dendrite Growth \cite{liu:2019}.
+			
+	\subsection{Exercises}
+		In this week the exercises are about improving the learning and how you can avoid over-fitting. In the first exercise we take a look at regularizers to reduce over-fitting. Then you have to use physics knowledge to achive a similar result with a custom loss function. Note the results will not be significantly better, but they will be a little better if you implement the solution correctly, most notably you will not see over-fitting. The code for this week and be found in the folder \texttt{week 4}.\newline
+		
+		\textbf{Exercise 1: Regularization}\newline
+		In this exercise you are given a network which is suffering from over-fitting, the code can be found in the script \texttt{regularizer.py}. 
+		
+		To help you chose the regularization method correctly here is some background on the data. The input is an array of numbers from 0 to 2. Using supervised training, the network must learn to produce the norm of the following wavefunction,
+		\begin{gather}
+			\Psi = \sqrt{\frac{2}{L}} \sin\paa{\frac{\pi n x}{L}},
+		\end{gather}
+		which is the solution to the infinite well potential where $L$ is the width of the well potential and $n$ is the energy level. Consider the what the values of the trainable parameters will be in this case where we have a normalized wavefunction.
+		
+		In this task you need to add an appropriate regularization method to improve the result and training. You should \textbf{NOT} modify the number of nodes or layers. The place you have to consider is where the network layers are defined near the \texttt{TODO} comment is. How many percent can you improve the result?.\newline
+		
+		\textbf{Exercise 2: Physics guided loss}\newline
+		In this exercise you are given a network which is suffering from over-fitting, similar to the previous exercise we consider wavefunction data. The code can be found in the script \texttt{physics\_loss.py}. You should not touch the network or add any regularization methods. You are to improve the result and fix the issue of over-fitting.
+		
+		To achieve this you are to develop you own custom loss function near the \texttt{TODO} comment. You are given the standard MSE function and a custom loss function takes two parameters; the true result $Y$ and the predicted result $\hat{Y}$. You are to add a physics guided loss term to improve the result and get rid of over-fitting. Inspired by Equation \ref{eq:conservation_loss}, consider the fact that quantum mechanics is unitary thus,
+		\begin{gather}
+			\int_{0}^{L} \norm{\Psi}^2 \dd x = 1.
+		\end{gather}
+		How many percent can you improve the result with this knowledge?\newline
+		\textbf{Hint:} You might need to implement a threshold value.\newline
+		
+		\textbf{Exercise 3: Physics network}\newline
+		In this exercise you are to design a simple two component network, which can help it act as the solution to the motion of a projectile motion in 1D.
+		
+		The Lagrangian is as follows,
+		\begin{gather}
+			\mathcal{L} = \frac{1}{2} m \dot{x} - mhx,
+		\end{gather}
+		where $h$ is the height. Note that we have the x-axis as the up and downwards direction. Assuming $x_0=0$, the solution is,
+		\begin{gather}
+			x(t) = v_0 t - \frac{1}{2} g t^2.
+		\end{gather}
+		In the the script \texttt{physics\_loss.py} you will find this to be implemented in the \texttt{call} function of the network class. The equation depend on \texttt{self.g} and \texttt{self.g}, which are the two parameters your network needs to imitate to get the right result. You are therefore to create two networks that yields two predicted parameters $\Theta_g$ and $\Theta_{v_0}$, which are what needs to be trained for the output to be correct. In the network class you find the \texttt{TODO} comment where you need to define your layers and then you needs to construct the network to train two parameters that such that we get the right output. We are thus using the network to determine the value for $v_0$ and $g$. You don't need to create a custom loss function, but you are free to do so if you want.\newline
+		\textbf{Hint:} You might need initialize the trainable parameters $\Theta_g$ and $\Theta_{v_0}$ to appropriate values for the training to work.\newline
+		
+	
 % -------------------------------------------------------------------
 % Bibliography
 % -------------------------------------------------------------------

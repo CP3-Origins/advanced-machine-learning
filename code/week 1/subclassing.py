@@ -28,10 +28,22 @@ X_test = scaler.transform(X_test)
 
 # TODO: Create a model using subclassing
 class Network(Model):
-    pass
+
+    def __init__(self):
+        super().__init__()
+        self.dense1 = Dense(units=8, activation='relu')
+        self.dense2 = Dense(units=3, activation='softmax')
+
+    def call(self, input_shape):
+        x = self.dense1(input_shape)
+        x = self.dense2(x)
+        return x
 
 
 model = Network()
+
+# Compile the model with categorical crossentropy loss for multi-class classification
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train the model
 history = model.fit(X_train, y_train, epochs=200, batch_size=8, validation_split=0.2)

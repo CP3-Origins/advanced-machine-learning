@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from keras.layers import Dense
+from keras.layers import Dense, Input
 from keras.models import Model
 from keras.utils import to_categorical
 
@@ -26,7 +26,15 @@ X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
 # TODO: Create a model using the functional interface
-model = Model()
+
+input = Input(shape=(4,))
+x = Dense(units=8, activation='relu')(input)
+output = Dense(units=3, activation='softmax')(x)
+
+model = Model(input, output)
+
+# Compile the model with categorical crossentropy loss for multi-class classification
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train the model
 history = model.fit(X_train, y_train, epochs=200, batch_size=8, validation_split=0.2)

@@ -17,7 +17,7 @@ class NeuralSolver:
 
         # Network Parameters
         # TODO: Build a suitable network and set the hyperparamters
-        self.epochs = 10
+        self.epochs = 100
         self.display_step = 10
         self.optimizer = tf.keras.optimizers.Adam(
             learning_rate=0.01,
@@ -30,7 +30,10 @@ class NeuralSolver:
         self.model = Sequential(
             [
                 Input(shape=(1,)),
-                Dense(1, activation="relu", name="layer1"),
+                Dense(8, activation="relu", name="layer1"),
+                Dense(32, activation="relu", name="layer2"),
+                Dense(32, activation="relu", name="layer3"),
+                Dense(8, activation="relu", name="layer4"),
                 Dense(1, name="output"),
             ]
         )

@@ -26,7 +26,13 @@ X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
 # TODO: Create a sequential model using a list of layers
-model = Sequential()
+model = Sequential([
+    Dense(units=8, input_dim=4, activation='relu'),
+    Dense(units=3, activation='softmax')
+])
+
+# Compile the model with categorical crossentropy loss for multi-class classification
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train the model
 history = model.fit(X_train, y_train, epochs=200, batch_size=8, validation_split=0.2)
