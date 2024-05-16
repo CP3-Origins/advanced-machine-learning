@@ -15,7 +15,16 @@ class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
 
 # TODO: Build your CNN here
 # Input shape is input_shape=(32, 32, 3)
-model = "Your model"
+model = tf.keras.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(32, 32, 3,)),
+    layers.MaxPooling2D(pool_size=(2, 2)),
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D(pool_size=(2, 2)),
+    layers.Flatten(),
+    layers.Dense(32, activation='relu'),
+    layers.Dense(16, activation='relu'),
+    layers.Dense(10, activation='softmax')
+])
 
 model.summary()
 

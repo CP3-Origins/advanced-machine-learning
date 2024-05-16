@@ -15,7 +15,14 @@ class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
 
 # TODO: Build your ANN here
 # Input shape is input_shape=(32, 32, 3)
-model = "Your model"
+model = tf.keras.Sequential([
+    layers.Flatten(input_shape=(32, 32, 3)),
+    layers.Dense(units=100, activation='relu'),
+    layers.Dense(units=100, activation='relu'),
+    layers.Dense(units=64, activation='relu'),
+    layers.Dense(units=32, activation='relu'),
+    layers.Dense(units=10, activation='softmax')
+])
 
 model.summary()
 

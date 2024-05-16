@@ -39,7 +39,8 @@ model = tf.keras.Sequential([
         # Use masking to handle the variable sequence lengths
         mask_zero=True),
     # Add your layers here
-    tf.keras.layers.Dense(1)
+    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
+    tf.keras.layers.Dense(1, activation="sigmoid")
 ])
 
 model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
