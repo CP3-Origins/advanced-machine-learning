@@ -96,6 +96,38 @@
 \definecolor{c4}{HTML}{9AC3E1}
 
 \newcommand{\empt}[2]{$#1^{\langle #2 \rangle}$}
+\usetikzlibrary{shapes.geometric, arrows}
+
+\tikzstyle{startstop} = [rectangle, rounded corners, 
+minimum width=3cm, 
+minimum height=1cm,
+text centered, 
+draw=black, 
+fill=red!30]
+
+\tikzstyle{io} = [trapezium, 
+trapezium stretches=true, % A later addition
+trapezium left angle=70, 
+trapezium right angle=110, 
+minimum width=3cm, 
+minimum height=1cm, text centered, 
+draw=black, fill=blue!30]
+
+\tikzstyle{process} = [rectangle, 
+minimum width=3cm, 
+minimum height=1cm, 
+text centered, 
+text width=3cm, 
+draw=black, 
+fill=orange!30]
+
+\tikzstyle{decision} = [diamond, 
+minimum width=3cm, 
+minimum height=1cm, 
+text centered, 
+draw=black, 
+fill=green!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
 % ============== Setting up fancy headers ... =========================
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -166,7 +198,7 @@
 			\item Machine learning and methods of training
 			\item Neural network architectures
 			\item Physics guidance in neural networks
-			\item TBD
+			\item Genetic programming
 		\end{itemize}
 		Each lecture will come with relevant code and exercises to prepare for the next lesson. Although the exercises are not mandatory, it is highly recommended to do as it will improve practical skills. After the first lesson we will start the lectures by discussing the exercise from the previous lecture. The course material is available at: \url{https://github.com/CP3-Origins/advanced-machine-learning}. Beyond the lecture notes Google is your friend.
 	
@@ -1523,10 +1555,151 @@ else:
 		\begin{gather}
 			x(t) = v_0 t - \frac{1}{2} g t^2.
 		\end{gather}
-		In the the script \texttt{physics\_loss.py} you will find this to be implemented in the \texttt{call} function of the network class. The equation depend on \texttt{self.g} and \texttt{self.g}, which are the two parameters your network needs to imitate to get the right result. You are therefore to create two networks that yields two predicted parameters $\Theta_g$ and $\Theta_{v_0}$, which are what needs to be trained for the output to be correct. In the network class you find the \texttt{TODO} comment where you need to define your layers and then you needs to construct the network to train two parameters that such that we get the right output. We are thus using the network to determine the value for $v_0$ and $g$. You don't need to create a custom loss function, but you are free to do so if you want.\newline
+		In the script \texttt{physics\_net.py} you will find this to be implemented in the \texttt{call} function of the network class. The equation depend on \texttt{self.g} and \texttt{self.g}, which are the two parameters your network needs to imitate to get the right result. You are therefore to create two networks that yields two predicted parameters $\Theta_g$ and $\Theta_{v_0}$, which are what needs to be trained for the output to be correct. In the network class you find the \texttt{TODO} comment where you need to define your layers and then you needs to construct the network to train two parameters that such that we get the right output. We are thus using the network to determine the value for $v_0$ and $g$. You don't need to create a custom loss function, but you are free to do so if you want.\newline
 		\textbf{Hint:} You might need initialize the trainable parameters $\Theta_g$ and $\Theta_{v_0}$ to appropriate values for the training to work.\newline
-		
 	
+\section{Genetic programming}
+	In this lecture we will consider genetic programming. This describes a way to evolve a program or algorithm inspired by evolution. The main advantage of this method is that you can train your ML method in a way that can better deal with false minima compared to traditional supervised learning. It helps stabilize the training where there is a risk of training parameters exploding. In this case you will get infinite or Nan (Not a number) values that results in a poor result and these parameter values will thus be discarded.
+	
+	We will first discuss conceptually how to train a using genetic programming also known as genetic algorithms. Then we look at it in detail in the context of neural networks, but the concept can be used for training other ML methods such as decision trees etc.
+	
+	\subsection{Genetic algorithms}
+		The method of genetic algorithms is inspired by Darwin's theory of natural evolution. The idea is in living beings we have biological data stored in DNA, but it could also be in other places such as RNA. The DNA encodes the blueprint of cells and thus the DNA encodes how a given living being will grow. Humans have a certain string of DNA which encodes the information need for a human to develop, but in this string of data in the DNA we also find details such as hair color, gender, height etc. 
+		
+		Natural evolution postulates that over time natural mutations of these genetic code can change to form new combinations. This could be minor changes such as a new hair color, but over time we would also see deviations from the original genetic code that would classify as a new species. In this way animals and humans have evolved from some other being that may or may not be extinct. In general breeding will also cause genetic code to be mixed, possible forming new permutations of the already exiting genetic code.
+		
+		This concept we can also use to make our genetic algorithm which is trained not by gradient decent, but by mutations and crossing of code. This procedure is shown in Figure \ref{fig:genetic}.
+		
+		
+		\begin{figure}
+			\centering
+			\begin{tikzpicture}[node distance=2cm]
+				
+				\node (start) [startstop] {Start};
+				\node (in1) [io, below of=start] {Input of initial population};
+				\node (pro1) [process, below of=in1] {Calculation of fitness function};
+				\node (pro2) [process, below of=pro1] {Selection};
+				\node (pro3) [process, below of=pro2] {Crossover};
+				\node (pro4) [process, below of=pro3] {Mutation};
+				\node (dec1) [decision, below of=pro4,yshift=-1cm] {Good enough?};
+				\node (pro5) [process, right of=dec1, xshift=3cm] {Next evolution};
+
+				\node (out1) [io, below of=dec1, yshift=-1cm] {Final population};
+				\node (stop) [startstop, below of=out1] {Stop};
+				
+				\draw [arrow] (start) -- (in1);
+				\draw [arrow] (in1) -- (pro1);
+				\draw [arrow] (pro1) -- (pro2);
+				\draw [arrow] (pro2) -- (pro3);
+				\draw [arrow] (pro3) -- (pro4);
+				\draw [arrow] (pro4) -- (dec1);
+				\draw [arrow] (dec1) -- node[anchor=east, yshift=0.5cm] {No} (pro5);
+				\draw [arrow] (pro5) |- (pro1);
+				\draw [arrow] (dec1) -- node[anchor=east] {Yes} (out1);
+				\draw [arrow] (out1) -- (stop);
+				
+			\end{tikzpicture}
+			\caption{Overview of the steps of how genetic algorithms evolve.}
+			\label{fig:genetic}
+		\end{figure}
+	
+		First we start with some population of parameter sets for the network we need to optimize. Recall, this could be used for any other application. A standard way to begin is to create a population with randomly initialized weights. Then we have a fit function to evaluate how good each set of parameters in our population is. Based on this score, we then select a selection of the best population and remove the worst parameter sets. Then we cross mutate parameters between the best parameter sets to create new parameter sets to replenish the population after we purged the worst parameter sets. Then we allow for some mutation of the parameters and then decide what to do.
+		
+		We could run the same fit function or some other condition to check if we want to stop the optimization. If we stop, then we en up with our final population. Then one may select the best performing of these models and use it. Otherwise, one can go to the next evolution where one evaluate the fitness of the new evolved population, select the best, delete the worst, refill the population via the cross over population, add mutations and evaluate the new generation.
+		
+		This describes the general steps of the genetic algorithm. This means that instead of the usual hyperparameters from supervised learning such as epochs, learning rate, batch size etc. we now consider the following:
+		\begin{itemize}
+			\item Fitness function
+			\item Population size
+			\item Selection method
+			\item Crossover method
+			\item Mutation rate
+			\item Generations
+		\end{itemize}
+		In the following we will go into detail with these steps.
+		
+		\subsubsection{Fitness function}
+			One of the most essential pieces to make a successful genetic algorithm is the evaluation of how good the parameters are, similar to the cost function in supervised learning. It is this function that will guide the algorithm to success. This fitness function is used to score each parameter set so we can determine which is better. The function can be anything but there are two main requirements:
+			\begin{itemize}
+				\item It must be fast to compute
+				\item It should quantitatively measure the goodness of the individual parameter sets in the population
+			\end{itemize}
+			Traditionally the fitness function yields a high values in the case the parameter sets are good, and a low value if they are poor. You should also consider to normalize the fitness score. There is however nothing prevent you from using doing supervised learning with and $X, Y$ dataset and compute the MSE as the fitness function, and the aim for minimizing the MSE.
+			
+			The advantage of genetic algorithms is however that they don't need to be trained in a supervised manner, and often you would choose the genetic approach because you do not have labeled data for supervised learning. On the other hand, if your main problem with supervised learning with gradient descent is false minima, then a genetic approach could work.
+			
+		\subsubsection{Population size}
+			The population size is fairly self-explanatory concept. We simply need to decide how large a population we consider when evolving our algorithm. There are however one thing to note. The larger the population the slower the population. The scaling is linear, twice as large population, twice as many fitness scores to compute, and so on.
+			
+			This also illustrates one of the downsize of genetic algorithms. We are not just considering a single parameter set like in the usual supervised learning, but a lot of parameter sets. As discussed earlier, for deep neural networks one could easily have millions of parameters. These parameters are stored in hardware, so imagine you have 100 MB worth of parameters for you network, and now you want to use a genetic algorithm to find the best parameters. If you have a population of just 100, then you will have to store 10 GB of parameters in memory. That is quite a lot. This also reminds that genetic learning is a rather compute intensive method to use.
+			
+		\subsubsection{Selection method}
+			There are in principle many ways to select what part of the population to use for further evolution. In general this yields some part of the population that is discarded, similar to survival of the fittest, and another part is used for the evolution. An incomplete list can be written as:
+			\begin{itemize}
+				\item Roulette wheel selection
+				\item Rank selection
+				\item Steady state selection
+				\item Tournament selection
+				\item Elitist selection
+				\item Boltzmann selection
+			\end{itemize}
+		
+			Roulette wheel selection is a method where one selects a the population based on weighted probabilities. The weights come from the fitness function such that a higher score from the fitness function yields a higher probability. We can express this probability as,
+			\begin{gather}
+				p_i = \frac{f_i}{\sum_j f_j},
+			\end{gather}
+			where $p_i$ is the probability of selecting as certain member of the population based on the fitness score $f_i$ for that member and then normalized by the sum of the member of the population.
+			
+			Another method is rank selection which doesn't directly use the fitness score, but to create a ranking of the population. One method to do this procedure with linear ranking with the following probability,
+			\begin{gather}
+				p_i (r_i) = \frac{1}{n}\paa{sp - \paa{2sp -2}\frac{i-1}{n-1}}, \quad \sum_i p_i (r_i)  = 1,
+			\end{gather}
+			where the probability $p_i$ is a function of the rank $r_i$ of the members of the population. Then $sp$ is the selection pressure, which is a parameter to tune between $1 \le sp \le 2$, with higher values increasing the selection pressure. This does favor the higher ranked members ($i=1$ is the highest ranking) but retains a non-zero probability for choosing low ranking members. Note that the higher the selection pressure the bigger the probability for choosing member with higher fitness.
+			
+			The most simple method is arguable steady state selection. Here one basically defines that the member of the population with the highest fitness scores are kept and the lowest are dropped.
+			
+			One can also use tournament selection which work be defining a tournament size $k$. One then creates tournaments of size $k$ and populate them randomly with members of the population. The winner in the tournament is the one with with the best fitness score. One can then select the best from each tournament, or create a probability such that the probability of choosing the best is $p$, and for choosing the second best is $p\paa{1-p}$ and so on. Introducing probabilities increase the chance of members with poor scores to survive. The tournament size $k$ is also important, because the bigger the size the bigger the chance that a top scoring member will be in the tournament and thus win it. The smaller the size, the bigger the change that all member in a given tournament will have a low score, and thus, a low $k$ increases the survival rates of member with a poor fitness score.
+			
+			Elitist selection is a nuance one can use in terms of how one preserves the best scoring members of the population. In principle during crossover, you can create the off spring, or new generation, purely from crossovers of the parent generation. With elitist selection, you select a certain elite which will be fully carried over to the next generation without any crossover. One can see this as the new generation still contain survivors from the previous generation. 
+			
+			Boltzmann selection is that of a scheduled temperature increases. The temperature increase correspond to an increase in the selection pressure. This means that as the number of evolution steps increase, so does the temperature and thus the selection pressure. This causes the algorithm to focus more on minor details in the end.
+			
+			One must remember also to consider how many percent of the population one uses to refill the next generation. If depending on the selection method one might get mostly member with high fitness, which limits the scope of what parameters are being tried. Maybe a single parameter of the whole parameter set is causing a poor fitness, but if one would just change that single parameter, then the fitness would be high, then one losses potentially good parameters by discarding members with a poor fitness score.
+			
+		\subsubsection{Crossover method}
+			Having chosen the selection method, one should consider how to generate the offspring. In general we generate the offspring from two parents. A simple way to do this is to have one-point crossover. Here one takes the parameters of the parents, make a cut and swap one part between the parents. This doesn't have to be 50-50 but could be 60-40 e.g.,
+			
+			\begin{gather}
+				\{ 101110|1010 \} + \{ 101100|1110 \}  \rightarrow  \{ 101100|1010 \} +  \{ 101110|1110 \},
+			\end{gather}
+			where the two parents mixed and one of the possible combinations is chosen. One can also make a two-point cross over,
+			\begin{gather}
+				\{ 101|110|1010 \} + \{ 111|100|1110 \}  \rightarrow  \{ 111|110|1110 \} +  \{ 101|100|1010 \},
+			\end{gather}
+			and like wise make an $k$-point crossover up to the limit of a uniform crossover when all parameters can be crossed.
+			
+			A problem with the $k$-point crossover is that there could be compatibility issues with what parameters are crossed creating illegal offspring. Consider the example of the parameters containing cities, with this type of cross over, most offspring will be illegal because not all cities will be in the offspring and some cities will be there more than once. Another issue is with encoding. Maybe some parameters are large and some a small. Then you can cross over large parameters into a parameter that should be small causing a blow up of that parameters.
+			
+			To fix these issues one can use masking, for example where the mask is 1, copy cities from one parent 
+			and were the mask is 0, choose the remaining cities in the order of the other parent. In this way we constrain what can be crossed to avoid ending up with illegal offspring. To fix the other issue with encoding, one can have an encoding the normalize the values, such that one can set a large or small value with respect to the scaling of each parameters. In this case a large value in one parameters might be 0.9 and in a another 24. 
+			
+		\subsubsection{Mutation rate}
+			In Darwin's theory, it is mutations that play a key role in species evolution into new types of species. In the case of genetic algorithms we generally cannot allow for a change in the number of parameters. So unlike in evolution were mutations and crossovers in principle can cause a change in the number of chromosomes, which contain they genetic code of living beings, we usually not allow for such drastic changes in algorithms unless we are working with something like decision trees which may allow for structural changes due to mutations.
+			
+			Therefore, mutations play a role in ensuring that we are searching for parameters in the largest possible parameter space. If we do not allow for mutation, then we will keep reducing the possible combinations we can obtain as we keep throwing away some of the worse scoring members of the population. This might be good towards the end of the evolution as a final fine tuning. One can thus have the mutation rate change over time.
+		
+			The simplest way to make mutations in code is to assign a probability for the parameters to mutate. In general this probability should be rather low at the order of a few percent or per mill. Then one needs to decide how the mutation should act. If a mutation event triggers, then one could just replace the parameter with a new random value. Alternatively, one could change the value by multiplying or adding a small number $\epsilon$ to the value.
+			
+			The mutation step is the last step of creating the offspring or next generation. It simple ensures that we keep exploring new parameters as we evolve the algorithm.
+		
+		\subsubsection{Generations}
+			The number of generation is simple how many generation we allow for. Note that when we consider the "Good enough?" condition one would check if the max number of generations is allowed. However, as you should realize at this point, it takes a lot of compute to compute the offspring for a new generation, so we also don't want to keep evolving the parameters if they are good enough. Therefore, we would often measure, possibly by using the fitness function, if our algorithm is good enough and then trigger the algorithm to stop before reaching max generations. 
+	
+	\subsection{Exercises}
+		As a challenge to students who would like a bit more experience with genetic algorithms, there will be one exercise for this final class. The exercise is in the folder \texttt{week 5}.\newline
+		
+		\textbf{Exercise 1: Genetic algorithm for neural network}\newline
+		In this exercise you are given the same network as the solution to the first exercise in the first lesson. We know that supervised learning can quickly yield results. However, instead of using this method you need to implement a genetic algorithm to tune the parameters to solve this challenge. Note, this should also tell you more about the compute penalty associated with this method. You can find the code for this exercise in the script \texttt{genetic.py} and you need to implement code where the \texttt{TODO} comment is located. Good luck!
 % -------------------------------------------------------------------
 % Bibliography
 % -------------------------------------------------------------------
